@@ -38,24 +38,33 @@
 
 % -----------------------------------------------------
 
-\title{Grievance-Resolution System for a Tier-2/3 City}
+\title{SkinSense}
 
 \BvrSetLabInstructor{Dr. Raghav B. Venkataramaiyer}
 
 \BvrSubtitle{%
+  Skin Analysis \& Skincare Recommendation Platform \\
   Project Proposal for UCS503P  \\
   Submitted to: \BvrLabInstructorValue \\ \bfseries
-  Thapar Institute of Engineering and Technology% 
+  Thapar Institute of Engineering and Technology%
 }
 
 \author{
-  Vidya Vaidyanathan, CSED%
-  \thanks{Roll No: \texttt{1024030xxx}, %
-    Email: \texttt{vvaidhanathan\_be24\@thapar.edu}}
-  \and 
-  Bhanurekha Ganesan, CSED%
-  \thanks{Roll No: \texttt{1024030xxx}, %
-    Email: \texttt{bganesan\_be24\@thapar.edu}}
+  Muskan Kohli, CSED%
+  \thanks{Roll No: \texttt{1024170453}, %
+    Email: \texttt{mkohli1\_be24\@thapar.edu}}
+  \and
+  Himantveer Kaur, CSED%
+  \thanks{Roll No: \texttt{1024170271}, %
+    Email: \texttt{hkaur10\_be24\@thapar.edu}}
+  \and
+  Ansh Bindal, CSED%
+  \thanks{Roll No: \texttt{1024170273}, %
+    Email: \texttt{abindal\_be24\@thapar.edu}}
+  \and
+  Arnav Chandla, CSED%
+  \thanks{Roll No: \texttt{1024170259}, %
+    Email: \texttt{achandla\_be24\@thapar.edu}}
 }
 
 \date{\today}
@@ -65,178 +74,240 @@
 
 \section{Higher-order goal%
   \BvrHint{\ldots secondary framing}}
-This project aims to improve sustainable urban
-governance by reducing the time and effort required to
-resolve citizen issues. While the topic is broader than
-any single municipality, the immediate engineering
-objective is to translate \emph{efficient public
-  service delivery} into a measurable, deployable
-software solution.
+This project aims to make personalized skincare guidance
+more accessible, reducing reliance on generic
+marketing-driven advice or costly dermatologist
+consultations for basic skin assessment. While the
+broader goal is accessible self-care, the immediate
+engineering objective is to translate a photo-based skin
+assessment into a measurable, deployable software
+solution that recommends suitable products and routines.
 
 \section{Time-to-value %
 \BvrHint{\ldots primary heuristic}}
 \begin{itemize}[leftmargin=0.7cm]
-    \item We will deliver meaningful increments quickly by prototyping the core user workflow and validating it with users within a short iteration window.
-    \item We will prioritize fast feedback over perfection by using weekly iterations (and targeting CI-backed automation early) to reduce release friction.
-    \item Success is defined by what can be delivered and measured in the first iteration, then improved based on user feedback.
+    \item We will deliver meaningful increments quickly by getting the core pipeline (photo upload $\rightarrow$ classification $\rightarrow$ recommendation) working end-to-end early, so integration problems surface while there is still time to address them.
+    \item We will prioritize fast feedback over perfection by using iterative development with CI-backed automation from the start, so every change is build-tested and deployable.
+    \item Success is defined by what can be delivered and measured in the first iteration, then improved based on further testing.
 \end{itemize}
 
 \section{Problem Statement}
-Citizens in a tier-2/3 Indian city face delays and uncertainty when reporting local issues (e.g., streetlight outages, water leakage, garbage accumulation, road potholes). Common pain points include:
+Most people do not have easy access to a dermatologist
+for basic skin assessment, and end up relying on
+subjective self-assessment or generic, marketing-driven
+product recommendations that do not account for their
+actual skin type, acne severity, or ingredient
+allergies. Common pain points include:
 \begin{itemize}[leftmargin=0.7cm]
-    \item \textbf{Fragmentation:} complaints are often made via multiple channels (calls, social media, paper forms), causing lost context.
-    \item \textbf{Low transparency:} citizens cannot easily see the status of their complaint (e.g., ``received'', ``assigned'', ``in progress'', ``resolved'').
-    \item \textbf{Slow coordination:} departments/field teams lack a unified, trackable workflow with clear ownership.
-    \item \textbf{Poor data quality:} duplicate or incomplete reports force rework and extend resolution time.
+    \item \textbf{Subjective self-assessment:} people often misjudge their own skin type (oily/dry/normal) or the severity of their acne, leading to mismatched product choices.
+    \item \textbf{Generic recommendations:} most skincare advice available online is not personalized, and does not account for an individual's specific skin condition.
+    \item \textbf{Ingredient conflicts and allergies:} users have no easy way to check whether a recommended product contains an ingredient they should avoid.
+    \item \textbf{No structured routine:} even when good products are chosen, users lack guidance on how to sequence them into a coherent morning/evening routine.
 \end{itemize}
 
-\textbf{Why this matters now (contextual relevance):} In an urban setting with limited staff bandwidth, even small process improvements can noticeably reduce resolution delays and repeated submissions.
+\textbf{Why this matters now (contextual relevance):} personalized skincare guidance is currently gated behind either paid consultations or trial-and-error, and a system that gives structured, explainable recommendations from a single photo can meaningfully lower that barrier.
 
 \section{Proposed Solution %
 \BvrHint{\ldots Software Proposition}}
 \subsection{Overview}
-Build a \textbf{web-based} ``Grievance-to-Resolution'' system with the following components:
+Build a \textbf{web-based} skin analysis and skincare
+recommendation platform with the following components:
 \begin{itemize}[leftmargin=0.7cm]
-    \item \textbf{Citizen submission portal:} users submit an issue with photo (optional), category, and locality/ward.
-    \item \textbf{Automated triage:} basic duplicate detection and completeness checks.
-    \item \textbf{Department workflow:} assign issues to relevant department/team and update statuses.
-    \item \textbf{Status transparency:} citizens track status and receive notifications when resolved.
-    \item \textbf{Admin/ops dashboard:} performance summaries (resolution time, backlog).
+    \item \textbf{Photo upload and analysis:} users upload a face photo for skin type and acne severity assessment.
+    \item \textbf{Skin type classification:} categorizes skin as oily, dry, or normal.
+    \item \textbf{Acne severity classification:} a coarse-to-fine grading approach on the four-level Hayashi scale (mild/moderate/severe/very severe).
+    \item \textbf{Rule-based recommendation engine:} matches skin type and acne severity against a curated product/ingredient database, with an allergy/ingredient exclusion filter and plain-language reasons for each recommendation.
+    \item \textbf{Routine builder:} organizes recommended products into a morning/evening (AM/PM) routine.
+    \item \textbf{Skin tone/undertone detection:} a lightweight, low-training-cost addition to refine recommendations (e.g., sunscreen suitability).
 \end{itemize}
 
 \subsection{Core workflow}
 \begin{enumerate}[leftmargin=0.7cm]
-    \item Citizen creates a complaint and receives a complaint ID immediately.
-    \item System validates completeness and suggests possible duplicates (lightweight similarity on text/category and approximate location).
-    \item Department staff update status (Received $\rightarrow$ Assigned $\rightarrow$ In Progress $\rightarrow$ Resolved).
-    \item Citizen views status updates and resolution notes.
+    \item User uploads a face photo through the web interface.
+    \item Backend runs the skin type and acne severity classifiers and returns their outputs.
+    \item The recommendation engine matches these outputs, plus any allergy filters set by the user, against the product/ingredient database.
+    \item The system returns a ranked product list with reasons, organized into an AM/PM routine.
 \end{enumerate}
 
-\subsection{Operational constraints for an educational, tier-2/3 setting}
+\subsection{Operational constraints for an educational setting}
 \begin{itemize}[leftmargin=0.7cm]
     \item Keep the solution usable on low-to-mid range devices via responsive web design.
-    \item Avoid dependence on advanced research algorithms; focus on workflow, automation, and system correctness.
-    \item Design for deployability using common web hosting and managed databases.
+    \item Rely on established transfer-learning techniques, a published, benchmarked architecture for acne grading (Section 5.2), and deterministic rule-based logic elsewhere, avoiding unvalidated or ad hoc algorithms.
+    \item Design for deployability using free-tier web hosting and managed databases.
 \end{itemize}
 
 \section{Solution Approach %
 \BvrHint{\ldots Engineering focus}}
-This is an engineering course project, so we focus on scalable administrative and workflow aspects rather than novel algorithm research.
+This is an engineering course project. The emphasis
+throughout is on correct, testable system design and
+integration, not on novel machine learning research.
 
-\subsection{Duplicate/quality assistance %
+\subsection{Recommendation logic %
 \BvrHint{\ldots non-research}}
-Duplicate detection will be heuristic-based:
+The recommendation engine is rule-based, not machine
+learned:
 \begin{itemize}[leftmargin=0.7cm]
-    \item Normalize text (category + short description keywords).
-    \item Use a simple similarity measure (e.g., token overlap / TF-IDF cosine with threshold) without claiming state-of-the-art.
-    \item Show top candidate duplicates to staff for decision; never fully auto-delete or auto-reject.
+    \item Match skin type, acne severity, skin tone, and allergy exclusions against tagged fields in the product/ingredient database.
+    \item Apply deterministic matching rules sourced from the ingredient database's documented suitability tags, not invented ad hoc.
+    \item Always show the reason a product was recommended or excluded; never silently drop a result.
 \end{itemize}
+This keeps the decision core deterministic and fully
+unit-testable, which is deliberate: we have no reliable
+ground-truth label for ``which product actually helped a
+given user,'' so a learned recommender would not be
+justifiable at this stage.
+
+\subsection{Acne severity grading approach %
+\BvrHint{\ldots engineering design}}
+Since ACNE04 has far more mild/moderate images than
+severe/very severe ones, a single 4-way classifier may
+struggle on the rarer classes. As a first attempt, we
+plan to try a two-step approach instead: a coarse
+low-vs-high severity split, followed by a finer
+classifier within each group. This is treated as an exploratory
+attempt rather than a guaranteed outcome; if it does not
+perform well in practice, a single classifier across all
+four levels serves as the fallback.
 
 \subsection{Web architecture %
 \BvrHint{\ldots web-based solution}}
 A typical 3-tier web architecture:
 \begin{itemize}[leftmargin=0.7cm]
-    \item \textbf{Frontend:} responsive UI for citizens and staff (status pages, submission form, dashboard).
-    \item \textbf{Backend API:} authentication, complaint submission, status transitions, assignment logic.
-    \item \textbf{Database:} store users, complaints, status history, attachments metadata.
+    \item \textbf{Frontend:} React, with a responsive upload page, results page, and a dark mode toggle.
+    \item \textbf{Backend API:} FastAPI, handling image upload, model inference calls, and recommendation-engine queries.
+    \item \textbf{Database:} PostgreSQL, storing the product catalog, ingredient data, and allergy/suitability tags, modeled with an explicit ER diagram.
 \end{itemize}
 
 \subsection{CI/CD and fast delivery enabler}
-CI/CD will be used to:
+GitHub Actions will be used to:
 \begin{itemize}[leftmargin=0.7cm]
-    \item Automatically build and run tests on every change.
-    \item Produce repeatable deployment artifacts to staging.
-    \item Enable safe and frequent releases of incremental features.
+    \item Automatically build and run backend unit tests and linting on every change.
+    \item Deploy the application to a staging environment (Render/Railway) on successful builds.
+    \item Enable safe, frequent releases of incremental features.
 \end{itemize}
 
 \section{Evaluation Criterion %
 \BvrHint{\ldots measurable and attributable}}
-We define success using measurable metrics tied to the core workflow.
+We define success using measurable metrics tied to the
+core classification and recommendation pipeline.
 
-\subsection{Primary evaluation metric}
-\textbf{Time-to-acknowledgement (TTA):} time between complaint submission and ``Received/Assigned'' status creation in the system.
+\subsection{Primary evaluation metrics}
 \begin{itemize}[leftmargin=0.7cm]
-    \item Target: median TTA $\le$ 2 hours during pilot window.
-    \item Attribution: measured from database timestamps (submission vs. first status update by staff).
+    \item \textbf{Skin type classifier:} target $\geq$ 80\% accuracy on a held-out test set.
+    \item \textbf{Acne severity classifier:} target $\geq$ 80\% accuracy, with a minimum acceptable floor of $\geq$ 70\%, given the added difficulty of this task. Macro-F1 is reported alongside accuracy, since acne severity classes are naturally imbalanced (mild/moderate cases far outnumber severe/very severe), and accuracy alone can mask poor performance on the rarer classes.
+    \item \textbf{Attribution:} both metrics are computed against the held-out test split of the respective training datasets, using a fixed, documented split before any tuning begins.
 \end{itemize}
 
 \subsection{Secondary evaluation metrics}
 \begin{itemize}[leftmargin=0.7cm]
-    \item \textbf{Resolution time reduction:} reduce time-to-resolved compared to baseline process (even if baseline is collected via survey).
-    \item \textbf{Duplicate rate:} percentage of complaints flagged as duplicates and resolved without rework.
-    \item \textbf{User clarity:} citizen-reported clarity of status using a simple 1--5 feedback question.
-    \item \textbf{Reliability:} availability of staging/production for login and submission during business hours (e.g., $\ge$ 99\% uptime in pilot).
+    \item \textbf{Recommendation engine test coverage:} target 100\% coverage of rule branches, since the engine is deterministic and fully testable by design.
+    \item \textbf{Inference time per scan:} measured and reported, to support a green-computing discussion of the lightweight backbone choice.
+    \item \textbf{Allergy filter correctness:} verified via test cases that a flagged ingredient never appears in a returned recommendation.
+    \item \textbf{User clarity:} pilot testers rate the clarity of the recommendation explanations on a 1--5 scale.
 \end{itemize}
 
 \subsection{Pilot validation plan %
 \BvrHint{\ldots high-level}}
 \begin{itemize}[leftmargin=0.7cm]
-    \item Recruit 10--20 pilot users (citizens) and 3--5 staff roles (department simulation if real staff unavailable).
-    \item Compare metrics before/after within the iteration window by logging baseline estimates via short interviews or existing process observations.
+    \item Once the system is functional end-to-end, recruit a small group of classmates/friends to test the upload-to-routine flow. No testers are lined up as of this proposal; this is a stated target for the testing phase.
+    \item Collect a 1--5 clarity rating plus open feedback on the recommendations and routine output.
 \end{itemize}
 
 \section{Scalability %
 \BvrHint{\ldots with foresight}}
-The proposition should scale in both theoretical and practical senses.
+The proposition should scale in both theoretical and
+practical senses.
 
 \begin{enumerate}[leftmargin=0.7cm]
-    \item \textbf{Scalable (theoretically):} The system should support growth in number of complaints and concurrent dashboard usage by:
+    \item \textbf{Scalable (theoretically):} the system should support growth in users and concurrent requests by:
     \begin{itemize}[leftmargin=0.7cm]
-        \item decoupling components (frontend/backend),
-        \item enabling pagination and indexing for common queries,
-        \item using stateless API design.
+        \item decoupling frontend and backend components,
+        \item indexing common product/ingredient queries in PostgreSQL,
+        \item using a stateless API design.
     \end{itemize}
-    
-    \item \textbf{Operationally deployable (practically):} The system should run on common web hosting:
+
+    \item \textbf{Operationally deployable (practically):} the system should run on common web hosting:
     \begin{itemize}[leftmargin=0.7cm]
-        \item managed database,
-        \item containerized or platform-hosted deployment,
-        \item CI/CD pipeline for staging/production.
+        \item a managed PostgreSQL database,
+        \item platform-hosted deployment (Render/Railway),
+        \item a GitHub Actions CI/CD pipeline for staging.
     \end{itemize}
 \end{enumerate}
 
 \section{Engine availability heuristic}
-A mature set of ``engines'' (tooling/services) is available to implement this as a web-based project:
+A mature set of ``engines'' (tooling/services) is
+available to implement this as a web-based project:
 \begin{itemize}[leftmargin=0.7cm]
-    \item Web framework for REST APIs and templated/reactive pages.
-    \item Managed relational or document database.
-    \item Authentication approach (token-based or session-based).
-    \item Object storage for optional attachments (or local storage for pilot).
-    \item Test framework for unit/integration tests.
-    \item CI runner and staging deployment target.
+    \item Pretrained CNN backbones for transfer learning, via PyTorch: MobileNetV2 for skin type, ResNet-50 for the coarse-to-fine acne severity grader.
+    \item Free GPU training environments (Google Colab / Kaggle Notebooks).
+    \item Web framework for REST APIs (FastAPI) with auto-generated documentation.
+    \item Managed relational database (PostgreSQL).
+    \item Test framework for unit/integration tests (\texttt{pytest}).
+    \item CI runner and staging deployment target (GitHub Actions, Render/Railway).
 \end{itemize}
-We will use these mature components to focus on workflow design, correctness, and measurement rather than inventing new infrastructure.
+These components are already mature and well documented,
+which lets us direct project effort toward model
+integration, rule design, correctness, and measurement.
 
 \section{Project scope and deliverables %
 \BvrHint{\ldots iteration-friendly}}
 \subsection{Initial deliverable %
 \BvrHint{\ldots first iteration}}
 \begin{itemize}[leftmargin=0.7cm]
-    \item Citizen submission form + complaint ID generation
-    \item Staff workflow: update status and assignment
-    \item Citizen status page: view timeline/history
-    \item Basic logging and timestamps for TTA measurement
+    \item Photo upload interface
+    \item Skin type classifier (oily/dry/normal) integrated behind a live API endpoint
+    \item Acne severity classifier (4-level Hayashi grading; coarse-to-fine split attempted first, single classifier as fallback) integrated behind a live API endpoint
+    \item Rule-based recommendation engine matching skin type and acne severity against the product database
+    \item Basic frontend: upload page and results page
     \item CI: build + backend unit tests + linting
-    \item CD to staging with a single command or pipeline job
+    \item CD to staging with a single pipeline job
 \end{itemize}
 
 \subsection{Subsequent deliverables}
 \begin{itemize}[leftmargin=0.7cm]
-    \item Lightweight duplicate suggestions with staff review
-    \item Notification layer (email/SMS optional in later iteration; can start with in-app notifications)
-    \item Admin dashboard for metrics and backlog
-    \item Improved search/filtering and indexed queries for scale readiness
+    \item AM/PM routine builder
+    \item Allergy/ingredient exclusion filter
+    \item Skin tone/undertone detector
+    \item ``Why recommended'' explanation tags for each product
+    \item Lesion count estimation, decoupled from the severity classifier
 \end{itemize}
+
+\subsection{Stretch goals %
+\BvrHint{\ldots Tier 3, attempted only if time remains}}
+\begin{itemize}[leftmargin=0.7cm]
+    \item A simple task queue (e.g., Celery) so a photo upload creates a job a worker processes asynchronously, with the frontend polling a status endpoint -- a basic, working version of event-driven design, not a production-grade one.
+    \item Flagging low-confidence scans using Monte Carlo Dropout, so users can be asked to retake an unclear photo.
+    \item Checking accuracy across different skin tones (Fitzpatrick17k), and trying a simple fix like balanced sampling if a real gap shows up.
+    \item Trying the skin-type model in-browser (e.g., TensorFlow.js) and comparing its speed to the server-based version.
+\end{itemize}
+A multi-class lesion detector is noted as a possible
+longer-term extension: fine-tune a pretrained
+object-detection model (e.g., YOLO, pretrained on COCO)
+on AcneSCU with moles, freckles, and melasma as
+categories separate from acne, so these are not
+misclassified as acne. This is not a committed
+deliverable, and is contingent on data availability.
 
 \section{Risks and mitigations}
 \begin{itemize}[leftmargin=0.7cm]
-    \item \textbf{Data privacy / consent:} minimize collected data; keep attachments optional; store only what is needed.
-    \item \textbf{Staff adoption:} provide an easy UI for status updates; keep workflow steps minimal; include shortcuts.
-    \item \textbf{Evaluation measurement ambiguity:} instrument timestamps and define clear status transitions before development begins.
-    \item \textbf{Operational issues in pilot:} use staging early; ensure CI/CD produces repeatable deployments.
+    \item \textbf{Acne severity accuracy:} expected to score lower than skin type; the coarse-to-fine attempt (Section 5.2) is a first try at improving this, with a plain classifier as fallback, and a safety-floor target of $\geq$ 70\% either way.
+    \item \textbf{Moles/freckles misread as acne:} mitigated by including non-acne examples in validation to measure the error, with a fine-tuned detector (Section 9.3) as a longer-term fix.
+    \item \textbf{Photo lighting/angle variability:} plan basic preprocessing (cropping, lighting normalization) before classification.
+    \item \textbf{ACNE04 access:} request from the original authors; a lower-quality but accessible Kaggle dataset is the fallback.
+    \item \textbf{Evaluation measurement ambiguity:} define accuracy/F1 targets and a fixed test split before development begins.
+    \item \textbf{Operational issues in staging:} deploy early; rely on CI/CD for repeatable deployments.
 \end{itemize}
 
 \section{Summary}
-This project proposes a deployable web platform to reduce grievance handling delays in a tier-2/3 city context. It meets the course criteria by emphasizing time-to-value through rapid iterations, implementing CI/CD to support frequent safe releases, and using measurable evaluation criteria (especially time-to-acknowledgement). It remains focused on engineering workflow and scalability readiness rather than research-driven novelty.
+This project proposes a deployable web platform that
+gives users a personalized, explainable skincare
+routine from a single uploaded photo. It meets the
+course criteria by emphasizing time-to-value through
+iterative delivery, using CI/CD to support frequent
+safe releases, and defining measurable evaluation
+criteria for both the classification models and the
+recommendation engine. The recommendation logic itself
+is kept deterministic and rule-based by design, keeping
+the project's focus on correct, testable engineering.
 
 \end{document}
