@@ -13,7 +13,7 @@
 \makeatletter \newcommand{\BvrSetLabInstructor}[1]{%
   \gdef\Bvr@LabInstructor{#1}}
 % default
-\newcommand{\Bvr@LabInstructor}{Dr. Nisha %
+\newcommand{\Bvr@LabInstructor}{Nisha %
   Thakur}
 % public accessor
 \newcommand{\BvrLabInstructorValue}{\Bvr@LabInstructor}
@@ -40,7 +40,7 @@
 
 \title{SkinSense}
 
-\BvrSetLabInstructor{Dr. Nisha Thakur}
+\BvrSetLabInstructor{Nisha Thakur}
 
 \BvrSubtitle{%
   Skin Analysis \& Skincare Recommendation Platform \\
@@ -72,8 +72,7 @@
 \begin{document}
 \maketitle
 
-\section{Higher-order goal%
-  \BvrHint{\ldots secondary framing}}
+\section{Higher-order goal}
 This project aims to make personalized skincare guidance
 more accessible, reducing reliance on generic
 marketing-driven advice or costly dermatologist
@@ -83,8 +82,7 @@ engineering objective is to translate a photo-based skin
 assessment into a measurable, deployable software
 solution that recommends suitable products and routines.
 
-\section{Time-to-value %
-\BvrHint{\ldots primary heuristic}}
+\section{Time-to-value}
 \begin{itemize}[leftmargin=0.7cm]
     \item We will deliver meaningful increments quickly by getting the core pipeline (photo upload $\rightarrow$ classification $\rightarrow$ recommendation) working end-to-end early, so integration problems surface while there is still time to address them.
     \item We will prioritize fast feedback over perfection by using iterative development with CI-backed automation from the start, so every change is build-tested and deployable.
@@ -107,8 +105,7 @@ allergies. Common pain points include:
 
 \textbf{Why this matters now (contextual relevance):} personalized skincare guidance is currently gated behind either paid consultations or trial-and-error, and a system that gives structured, explainable recommendations from a single photo can meaningfully lower that barrier.
 
-\section{Proposed Solution %
-\BvrHint{\ldots Software Proposition}}
+\section{Proposed Solution}
 \subsection{Overview}
 Build a \textbf{web-based} skin analysis and skincare
 recommendation platform with the following components:
@@ -136,14 +133,12 @@ recommendation platform with the following components:
     \item Design for deployability using free-tier web hosting and managed databases.
 \end{itemize}
 
-\section{Solution Approach %
-\BvrHint{\ldots Engineering focus}}
+\section{Solution Approach}
 This is an engineering course project. The emphasis
 throughout is on correct, testable system design and
 integration, not on novel machine learning research.
 
-\subsection{Recommendation logic %
-\BvrHint{\ldots non-research}}
+\subsection{Recommendation logic}
 The recommendation engine is rule-based, not machine
 learned:
 \begin{itemize}[leftmargin=0.7cm]
@@ -157,8 +152,7 @@ ground-truth label for ``which product actually helped a
 given user,'' so a learned recommender would not be
 justifiable at this stage.
 
-\subsection{Acne severity grading approach %
-\BvrHint{\ldots engineering design}}
+\subsection{Acne severity grading approach}
 Since ACNE04 has far more mild/moderate images than
 severe/very severe ones, a single 4-way classifier may
 struggle on the rarer classes. As a first attempt, we
@@ -169,8 +163,7 @@ attempt rather than a guaranteed outcome; if it does not
 perform well in practice, a single classifier across all
 four levels serves as the fallback.
 
-\subsection{Web architecture %
-\BvrHint{\ldots web-based solution}}
+\subsection{Web architecture}
 A typical 3-tier web architecture:
 \begin{itemize}[leftmargin=0.7cm]
     \item \textbf{Frontend:} React, with a responsive upload page, results page, and a dark mode toggle.
@@ -186,8 +179,7 @@ GitHub Actions will be used to:
     \item Enable safe, frequent releases of incremental features.
 \end{itemize}
 
-\section{Evaluation Criterion %
-\BvrHint{\ldots measurable and attributable}}
+\section{Evaluation Criterion}
 We define success using measurable metrics tied to the
 core classification and recommendation pipeline.
 
@@ -206,15 +198,13 @@ core classification and recommendation pipeline.
     \item \textbf{User clarity:} pilot testers rate the clarity of the recommendation explanations on a 1--5 scale.
 \end{itemize}
 
-\subsection{Pilot validation plan %
-\BvrHint{\ldots high-level}}
+\subsection{Pilot validation plan}
 \begin{itemize}[leftmargin=0.7cm]
     \item Once the system is functional end-to-end, recruit a small group of classmates/friends to test the upload-to-routine flow. No testers are lined up as of this proposal; this is a stated target for the testing phase.
     \item Collect a 1--5 clarity rating plus open feedback on the recommendations and routine output.
 \end{itemize}
 
-\section{Scalability %
-\BvrHint{\ldots with foresight}}
+\section{Scalability}
 The proposition should scale in both theoretical and
 practical senses.
 
@@ -249,10 +239,8 @@ These components are already mature and well documented,
 which lets us direct project effort toward model
 integration, rule design, correctness, and measurement.
 
-\section{Project scope and deliverables %
-\BvrHint{\ldots iteration-friendly}}
-\subsection{Initial deliverable %
-\BvrHint{\ldots first iteration}}
+\section{Project scope and deliverables}
+\subsection{Initial deliverable}
 \begin{itemize}[leftmargin=0.7cm]
     \item Photo upload interface
     \item Skin type classifier (oily/dry/normal) integrated behind a live API endpoint
@@ -272,8 +260,7 @@ integration, rule design, correctness, and measurement.
     \item Lesion count estimation, decoupled from the severity classifier
 \end{itemize}
 
-\subsection{Stretch goals %
-\BvrHint{\ldots Tier 3, attempted only if time remains}}
+\subsection{Stretch goals}
 \begin{itemize}[leftmargin=0.7cm]
     \item A simple task queue (e.g., Celery) so a photo upload creates a job a worker processes asynchronously, with the frontend polling a status endpoint -- a basic, working version of event-driven design, not a production-grade one.
     \item Flagging low-confidence scans using Monte Carlo Dropout, so users can be asked to retake an unclear photo.
