@@ -1,19 +1,17 @@
-﻿
-[build-system]
+﻿[build-system]
 requires = ["hatchling","hatch-vcs"]
 build-backend = "hatchling.build"
 
 [project]
-name = "tiet-ucs503.github.io/ucs503p-202627odd-template"
+name = "skinsense"
 version = "0.0.1"
 authors = [
-  { name="Raghav B. Venkataramaiyer", email="bv.raghav@thapar.edu" },
+  { name="Himantveer Kaur" },
+  { name="Muskan Kohli" },
+  { name="Ansh Bindal" },
+  { name="Arnav Chandla" },
 ]
-# maintainers = [
-#   { name="Raghav B. Venkataramaiyer",
-#     email="bvraghav@gmail.com" },
-# ]
-description = "UCS503 : Software Engineering : Project Sample"
+description = "SkinSense -- AI skin analysis and skincare recommendation app (UCS503P project)"
 readme = "README.md"
 requires-python = ">=3.8"
 classifiers = [
@@ -30,12 +28,12 @@ classifiers = [
 dependencies = ["click"]
 
 [project.urls]
-Homepage = "https://github.com/tiet-ucs503/ucs503p-202627odd-template"
-Issues = "https://github.com/tiet-unc512/ucs503p-202627odd-template/issues"
+Homepage = "https://github.com/Himmat913/UCS503P-202627-SkinSense"
+Issues = "https://github.com/Himmat913/UCS503P-202627-SkinSense/issues"
 
 # Adapted from https://stackoverflow.com/a/50156706
 [tool.pytest.ini_options]
 pythonpath = [
-  "code"
+  "code/backend"
 ]
 # THE END -------------------------------------------
