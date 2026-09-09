@@ -1,0 +1,34 @@
+[
+  {
+    "ingredient_a": "retinol",
+    "ingredient_b": "salicylic acid",
+    "severity": "avoid together",
+    "reason": "Combined exfoliation from a retinoid and a BHA raises the risk of barrier damage, redness and peeling.",
+    "handling": "Separate across the day (one AM, one PM) or alternate nights; never layer in the same routine step.",
+    "source": "American Academy of Dermatology — 'Retinoid do's and don'ts' (aad.org/retinoids)"
+  },
+  {
+    "ingredient_a": "retinol",
+    "ingredient_b": "benzoyl peroxide",
+    "severity": "avoid together",
+    "reason": "Benzoyl peroxide can oxidise and deactivate retinol when applied together, reducing the effect of both.",
+    "handling": "Use on alternate evenings rather than the same routine step.",
+    "source": "Kircik LH, 'The role of benzoyl peroxide in the new treatment paradigm for acne', J Drugs Dermatol (2016)"
+  },
+  {
+    "ingredient_a": "benzoyl peroxide",
+    "ingredient_b": "ascorbic acid",
+    "severity": "separate",
+    "reason": "Benzoyl peroxide oxidises vitamin C, reducing its antioxidant stability and effectiveness.",
+    "handling": "Vitamin C in the morning, benzoyl peroxide in the evening.",
+    "source": "Del Rosso JQ et al., 'Status Report on Topical Benzoyl Peroxide', J Clin Aesthet Dermatol (2020)"
+  },
+  {
+    "ingredient_a": "salicylic acid",
+    "ingredient_b": "ascorbic acid",
+    "severity": "caution",
+    "reason": "Both are low-pH actives; stacking them in one step can increase irritation on sensitive skin, though many tolerate it fine.",
+    "handling": "Space them across the day if stinging or redness occurs; otherwise no hard restriction.",
+    "source": "Draelos ZD, 'Cosmetic Dermatology: Products and Procedures', 2nd ed. (2015), ch. on combining actives"
+  }
+]
