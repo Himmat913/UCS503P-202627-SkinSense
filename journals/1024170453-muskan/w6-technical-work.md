@@ -2,7 +2,7 @@
 
 ## ResNet-50 Training Script and First Run
 
-I worked on the training side of the acne notebook alongside Himmat, once his preprocessed ACNE04 split and class-smoothing logic were ready to train against:
+I worked on the training side of the acne notebook alongside Himmat, once her preprocessed ACNE04 split and class-smoothing logic were ready to train against:
 
 - **Training script** — wrote the ResNet-50 training loop on top of an ImageNet-pretrained backbone, with the final layer swapped out for the 3-class severity head.
 - **Loss and class weighting** — used weighted cross-entropy on top of the inverse-frequency smoothing already applied to the class counts, so the severe class (the smallest one) still got a meaningful gradient signal.
