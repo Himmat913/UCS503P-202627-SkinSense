@@ -1,0 +1,74 @@
+[
+  {
+    "name": "salicylic acid",
+    "type": "BHA",
+    "role": "Unclogs pores and reduces inflammatory acne by exfoliating inside the follicle.",
+    "caution": "Can irritate dry or sensitized skin; introduce gradually, 2-3 times a week at first."
+  },
+  {
+    "name": "niacinamide",
+    "type": "Vitamin B3",
+    "role": "Regulates sebum production and evens skin tone; well tolerated by nearly all skin types.",
+    "caution": "Generally safe to pair with other actives."
+  },
+  {
+    "name": "retinol",
+    "type": "Retinoid",
+    "role": "Increases cell turnover; treats both acne and post-acne texture over time.",
+    "caution": "Evening use only; increases sun sensitivity, always follow with SPF the next morning."
+  },
+  {
+    "name": "benzoyl peroxide",
+    "type": "Antimicrobial",
+    "role": "Kills the acne-causing bacteria C. acnes; effective against inflammatory breakouts.",
+    "caution": "Bleaches fabric and towels; drying at higher concentrations."
+  },
+  {
+    "name": "hyaluronic acid",
+    "type": "Humectant",
+    "role": "Draws water into the skin surface, improving hydration without adding oil.",
+    "caution": "Apply to damp skin and seal with a moisturiser, or it can pull moisture from deeper layers in dry climates."
+  },
+  {
+    "name": "ascorbic acid",
+    "type": "Vitamin C",
+    "role": "Antioxidant that brightens post-acne marks and supports collagen.",
+    "caution": "Unstable in light and air; store in a cool, dark place and use within a few months of opening."
+  },
+  {
+    "name": "zinc oxide",
+    "type": "Mineral UV filter",
+    "role": "Broad-spectrum UV protection; also has mild anti-inflammatory properties.",
+    "caution": "Mineral formulas can leave a visible cast on deeper skin tones — tinted versions reduce this."
+  },
+  {
+    "name": "zinc pca",
+    "type": "Sebum regulator",
+    "role": "Helps balance oil production, often paired with niacinamide in oily-skin formulas.",
+    "caution": "Generally well tolerated."
+  },
+  {
+    "name": "glycerin",
+    "type": "Humectant",
+    "role": "Draws and holds moisture in the skin; a base-level hydrator in most cleansers and moisturisers.",
+    "caution": "Generally well tolerated."
+  },
+  {
+    "name": "panthenol",
+    "type": "Soothing agent (pro-vitamin B5)",
+    "role": "Calms irritation and supports the skin barrier, often used after exfoliating actives.",
+    "caution": "Generally well tolerated."
+  },
+  {
+    "name": "titanium dioxide",
+    "type": "Mineral UV filter",
+    "role": "Broad-spectrum UV protection, often paired with zinc oxide in mineral sunscreens.",
+    "caution": "Can leave a cast on deeper skin tones; tinted formulas reduce this."
+  },
+  {
+    "name": "fragrance",
+    "type": "Additive",
+    "role": "Scent only — provides no skincare benefit.",
+    "caution": "One of the most common contact allergens; always excluded when listed as an allergy."
+  }
+]

@@ -2,9 +2,35 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>frontend</title>
+    <meta name="description" content="SkinSense — photo-based skin analysis and personalised skincare routines." />
+    <title>SkinSense</title>
+
+    <!-- Mainline's type pairing: DM Sans for display, Inter for body text. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&family=Inter:wght@400;500;600&display=swap"
+      rel="stylesheet"
+    />
+
+    <!--
+      Applies the saved theme before React mounts. Without this the page paints
+      light, then flips to dark once JS runs, which reads as a bug.
+    -->
+    <script>
+      (function () {
+        try {
+          var stored = localStorage.getItem("skinsense-theme");
+          var prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+          if (stored === "dark" || (!stored && prefersDark)) {
+            document.documentElement.classList.add("dark");
+          }
+        } catch (e) {
+          /* private mode / storage disabled — fall through to light */
+        }
+      })();
+    </script>
   </head>
   <body>
     <div id="root"></div>

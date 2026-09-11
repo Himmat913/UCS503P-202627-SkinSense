@@ -1,0 +1,101 @@
+[
+  { "id": "p_001", "name": "Gentle Foaming Cleanser", "brand": "Cetaphil", "category": "cleanser",
+    "price": 349, "step_time": "both", "skin_types": "oily,normal", "severities": "mild,moderate,severe",
+    "key_ingredients": ["niacinamide", "glycerin"],
+    "base_reason": "Non-stripping enough for daily use; suits oily skin without over-drying it." },
+
+  { "id": "p_002", "name": "Hydrating Cream Cleanser", "brand": "CeraVe", "category": "cleanser",
+    "price": 425, "step_time": "both", "skin_types": "dry,normal", "severities": "mild,moderate,severe",
+    "key_ingredients": ["glycerin", "hyaluronic acid"],
+    "base_reason": "Cream formula that cleanses without disturbing an already-dry skin barrier." },
+
+  { "id": "p_003", "name": "Salicylic Acid Face Wash", "brand": "Neutrogena", "category": "cleanser",
+    "price": 299, "step_time": "both", "skin_types": "oily", "severities": "moderate,severe",
+    "key_ingredients": ["salicylic acid"],
+    "base_reason": "Low-strength BHA wash helps keep pores clear in oilier, more acne-prone skin." },
+
+  { "id": "p_004", "name": "2% Salicylic Acid Solution", "brand": "The Ordinary", "category": "treatment",
+    "price": 650, "step_time": "pm", "skin_types": "oily,normal", "severities": "moderate,severe",
+    "key_ingredients": ["salicylic acid"],
+    "base_reason": "Targets moderate to severe acne by exfoliating inside the pore." },
+
+  { "id": "p_005", "name": "10% Benzoyl Peroxide Gel", "brand": "Clean & Clear", "category": "treatment",
+    "price": 210, "step_time": "pm", "skin_types": "oily", "severities": "moderate,severe",
+    "key_ingredients": ["benzoyl peroxide"],
+    "base_reason": "Directly targets acne-causing bacteria for inflammatory breakouts." },
+
+  { "id": "p_006", "name": "Retinol 0.3% in Squalane", "brand": "The Ordinary", "category": "treatment",
+    "price": 780, "step_time": "pm", "skin_types": "normal,oily", "severities": "mild,moderate",
+    "key_ingredients": ["retinol"],
+    "base_reason": "Entry-level retinoid to improve texture and support acne clearance over time." },
+
+  { "id": "p_007", "name": "Niacinamide 10% + Zinc 1%", "brand": "Minimalist", "category": "serum",
+    "price": 399, "step_time": "both", "skin_types": "oily,normal", "severities": "mild,moderate,severe",
+    "key_ingredients": ["niacinamide", "zinc pca"],
+    "base_reason": "Reduces sebum production and helps post-acne marks fade." },
+
+  { "id": "p_008", "name": "Hyaluronic Acid Serum", "brand": "Minimalist", "category": "serum",
+    "price": 449, "step_time": "both", "skin_types": "dry,normal,oily", "severities": "mild,moderate,severe",
+    "key_ingredients": ["hyaluronic acid"],
+    "base_reason": "Adds hydration without oil — suits any of the three skin types." },
+
+  { "id": "p_009", "name": "Vitamin C 10% Serum", "brand": "Dot & Key", "category": "serum",
+    "price": 595, "step_time": "am", "skin_types": "dry,normal", "severities": "mild,moderate",
+    "key_ingredients": ["ascorbic acid"],
+    "base_reason": "Brightens post-acne marks and adds antioxidant protection for the day." },
+
+  { "id": "p_010", "name": "Zinc-PCA Oil Control Serum", "brand": "Plum", "category": "serum",
+    "price": 425, "step_time": "am", "skin_types": "oily", "severities": "moderate,severe",
+    "key_ingredients": ["zinc pca", "niacinamide"],
+    "base_reason": "Helps manage excess oil through the day in oilier, more severe cases." },
+
+  { "id": "p_011", "name": "Oil-Free Gel Moisturiser", "brand": "Neutrogena", "category": "moisturiser",
+    "price": 499, "step_time": "both", "skin_types": "oily,normal", "severities": "mild,moderate,severe",
+    "key_ingredients": ["hyaluronic acid", "glycerin"],
+    "base_reason": "Hydrates without adding oil; non-comedogenic." },
+
+  { "id": "p_012", "name": "Ceramide Repair Cream", "brand": "CeraVe", "category": "moisturiser",
+    "price": 550, "step_time": "both", "skin_types": "dry", "severities": "mild,moderate,severe",
+    "key_ingredients": ["glycerin", "panthenol"],
+    "base_reason": "Rich, barrier-supporting cream suited to dry skin at any severity." },
+
+  { "id": "p_013", "name": "Lightweight Daily Moisturiser", "brand": "Simple", "category": "moisturiser",
+    "price": 375, "step_time": "both", "skin_types": "normal,dry", "severities": "mild,moderate",
+    "key_ingredients": ["glycerin", "panthenol"],
+    "base_reason": "Fragrance-free daily hydration for normal to dry skin." },
+
+  { "id": "p_014", "name": "Alcohol-Free Hydrating Toner", "brand": "Klairs", "category": "toner",
+    "price": 780, "step_time": "both", "skin_types": "dry,normal,oily", "severities": "mild,moderate,severe",
+    "key_ingredients": ["hyaluronic acid", "panthenol"],
+    "base_reason": "Restores moisture after cleansing without drying alcohols." },
+
+  { "id": "p_015", "name": "BHA Exfoliating Toner", "brand": "Plum", "category": "toner",
+    "price": 450, "step_time": "pm", "skin_types": "oily", "severities": "moderate,severe",
+    "key_ingredients": ["salicylic acid"],
+    "base_reason": "A gentler, toner-strength dose of BHA for daily pore maintenance." },
+
+  { "id": "p_016", "name": "Calming Centella Toner", "brand": "Dot & Key", "category": "toner",
+    "price": 495, "step_time": "both", "skin_types": "normal,dry", "severities": "mild,moderate",
+    "key_ingredients": ["panthenol", "glycerin"],
+    "base_reason": "Soothes and preps skin — suited to calmer, lower-severity routines." },
+
+  { "id": "p_017", "name": "Matte Sunscreen SPF50 PA+++", "brand": "Re'equil", "category": "sunscreen",
+    "price": 690, "step_time": "am", "skin_types": "oily,normal", "severities": "mild,moderate,severe",
+    "key_ingredients": ["zinc oxide", "titanium dioxide"],
+    "base_reason": "No white cast on medium skin tones; matte finish suits oilier skin." },
+
+  { "id": "p_018", "name": "Hydrating Sunscreen SPF50", "brand": "La Roche-Posay", "category": "sunscreen",
+    "price": 1450, "step_time": "am", "skin_types": "dry,normal", "severities": "mild,moderate,severe",
+    "key_ingredients": ["zinc oxide", "glycerin"],
+    "base_reason": "Adds hydration alongside sun protection for drier skin." },
+
+  { "id": "p_019", "name": "Tinted Mineral Sunscreen SPF30", "brand": "Mamaearth", "category": "sunscreen",
+    "price": 549, "step_time": "am", "skin_types": "dry,normal,oily", "severities": "mild,moderate,severe",
+    "key_ingredients": ["zinc oxide", "titanium dioxide"],
+    "base_reason": "Tinted mineral formula reduces the white cast common to zinc/titanium filters." },
+
+  { "id": "p_020", "name": "Rose Water Facial Mist", "brand": "Biotique", "category": "toner",
+    "price": 199, "step_time": "both", "skin_types": "dry,normal", "severities": "mild",
+    "key_ingredients": ["fragrance", "glycerin"],
+    "base_reason": "Light hydrating mist for low-severity routines." }
+]

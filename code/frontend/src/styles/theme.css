@@ -1,0 +1,146 @@
+/*
+ * SkinSense design tokens.
+ *
+ * Ported from shadcnblocks/mainline-nextjs-template (src/styles/globals.css).
+ * Values are copied verbatim from the template; variable names deliberately
+ * match shadcn/ui's, so if this project ever adopts Tailwind 4 + shadcn the
+ * tokens map across unchanged and only components.css is discarded.
+ */
+
+:root {
+  /* --- surfaces & text --- */
+  --background: oklch(1 0 0);
+  --foreground: oklch(0.145 0 0);
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.145 0 0);
+
+  /* Mainline's signature: a warm cream primary with dark brown text on top. */
+  --primary: oklch(0.92 0.04 86.47);
+  --primary-foreground: oklch(0.31 0.02 86.64);
+
+  --secondary: oklch(0.97 0 0);
+  --secondary-foreground: oklch(0.205 0 0);
+  --muted: oklch(0.97 0 0);
+  --muted-foreground: oklch(0.556 0 0);
+  --accent: oklch(0.97 0 0);
+  --accent-foreground: oklch(0.205 0 0);
+
+  --destructive: oklch(0.577 0.245 27.325);
+  --destructive-foreground: oklch(0.985 0 0);
+
+  --border: oklch(0.922 0 0);
+  --input: oklch(0.922 0 0);
+  --ring: oklch(0.708 0 0);
+
+  /* --- status colours (from the template's chart ramp, reused semantically) --- */
+  --success: oklch(0.55 0.14 150);
+  --warning: oklch(0.769 0.188 70.08);
+  --info: oklch(0.6 0.118 184.704);
+
+  /* --- geometry --- */
+  --radius: 8px;
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) * 2 - 4px);
+  --radius-2xl: calc(var(--radius) * 2);
+
+  /* --- elevation --- */
+  --shadow-xs: 0 1px 3px 0px hsl(0 0% 0% / 0.05);
+  --shadow-sm: 0 1px 3px 0px hsl(0 0% 0% / 0.1), 0 1px 2px -1px hsl(0 0% 0% / 0.1);
+  --shadow-md: 0 1px 3px 0px hsl(0 0% 0% / 0.1), 0 2px 4px -1px hsl(0 0% 0% / 0.1);
+  --shadow-lg: 0 1px 3px 0px hsl(0 0% 0% / 0.1), 0 4px 6px -1px hsl(0 0% 0% / 0.1);
+
+  /* --- type --- */
+  --font-display: "DM Sans", ui-sans-serif, system-ui, sans-serif;
+  --font-text: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+  --display-weight: 600;
+  --text-weight: 400;
+
+  /* --- layout --- */
+  --container-max: 1220px;
+  --container-pad: 1.5rem;
+}
+
+.dark {
+  --background: oklch(0.145 0 0);
+  --foreground: oklch(0.985 0 0);
+  --card: oklch(0.205 0 0);
+  --card-foreground: oklch(0.985 0 0);
+
+  /* In dark mode the template flips primary to near-white on near-black. */
+  --primary: oklch(0.922 0 0);
+  --primary-foreground: oklch(0.205 0 0);
+
+  --secondary: oklch(0.269 0 0);
+  --secondary-foreground: oklch(0.985 0 0);
+  --muted: oklch(0.269 0 0);
+  --muted-foreground: oklch(0.708 0 0);
+  --accent: oklch(0.269 0 0);
+  --accent-foreground: oklch(0.985 0 0);
+
+  --destructive: oklch(0.704 0.191 22.216);
+  --destructive-foreground: oklch(0.145 0 0);
+
+  --border: oklch(1 0 0 / 10%);
+  --input: oklch(1 0 0 / 15%);
+  --ring: oklch(0.556 0 0);
+
+  --success: oklch(0.72 0.15 150);
+  --warning: oklch(0.828 0.189 84.429);
+  --info: oklch(0.696 0.17 162.48);
+}
+
+/*
+ * sRGB fallbacks. The proposal targets low-to-mid range devices, some of which
+ * ship older WebViews without oklch() support; without this block those render
+ * with no colour at all rather than approximate colour.
+ */
+@supports not (color: oklch(0.5 0.1 200)) {
+  :root {
+    --background: #ffffff;
+    --foreground: #0a0a0a;
+    --card: #ffffff;
+    --card-foreground: #0a0a0a;
+    --primary: #f0e3c7;
+    --primary-foreground: #353025;
+    --secondary: #f5f5f5;
+    --secondary-foreground: #262626;
+    --muted: #f5f5f5;
+    --muted-foreground: #737373;
+    --accent: #f5f5f5;
+    --accent-foreground: #262626;
+    --destructive: #e40016;
+    --destructive-foreground: #fafafa;
+    --border: #e5e5e5;
+    --input: #e5e5e5;
+    --ring: #a1a1a1;
+    --success: #1c8742;
+    --warning: #f69e00;
+    --info: #009488;
+  }
+
+  .dark {
+    --background: #0a0a0a;
+    --foreground: #fafafa;
+    --card: #171717;
+    --card-foreground: #fafafa;
+    --primary: #e5e5e5;
+    --primary-foreground: #171717;
+    --secondary: #262626;
+    --secondary-foreground: #fafafa;
+    --muted: #262626;
+    --muted-foreground: #a1a1a1;
+    --accent: #262626;
+    --accent-foreground: #fafafa;
+    --destructive: #ff6568;
+    --destructive-foreground: #0a0a0a;
+    --border: rgba(255, 255, 255, 0.1);
+    --input: rgba(255, 255, 255, 0.15);
+    --ring: #8c8c8c;
+    --success: #53be70;
+    --warning: #f6c000;
+    --info: #2ec4a6;
+  }
+}
