@@ -1,41 +1,44 @@
 /*
  * SkinSense design tokens.
  *
- * Ported from shadcnblocks/mainline-nextjs-template (src/styles/globals.css).
- * Values are copied verbatim from the template; variable names deliberately
- * match shadcn/ui's, so if this project ever adopts Tailwind 4 + shadcn the
- * tokens map across unchanged and only components.css is discarded.
+ * Structure ported from shadcnblocks/mainline-nextjs-template — oklch tokens,
+ * 8px radius ladder, DM Sans/Inter pairing all carry over. Palette shifted
+ * to a botanical sage + warm apricot pairing so the product reads as
+ * skincare rather than generic SaaS cream-and-charcoal.
  */
 
 :root {
   /* --- surfaces & text --- */
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.145 0 0);
+  --background: oklch(0.985 0.006 95);
+  --foreground: oklch(0.2 0.02 150);
   --card: oklch(1 0 0);
-  --card-foreground: oklch(0.145 0 0);
+  --card-foreground: oklch(0.2 0.02 150);
 
-  /* Mainline's signature: a warm cream primary with dark brown text on top. */
-  --primary: oklch(0.92 0.04 86.47);
-  --primary-foreground: oklch(0.31 0.02 86.64);
+  --primary: oklch(0.52 0.1 155);
+  --primary-foreground: oklch(0.98 0.01 95);
 
-  --secondary: oklch(0.97 0 0);
-  --secondary-foreground: oklch(0.205 0 0);
-  --muted: oklch(0.97 0 0);
-  --muted-foreground: oklch(0.556 0 0);
-  --accent: oklch(0.97 0 0);
-  --accent-foreground: oklch(0.205 0 0);
+  --secondary: oklch(0.95 0.014 95);
+  --secondary-foreground: oklch(0.26 0.02 150);
+  --muted: oklch(0.955 0.012 95);
+  --muted-foreground: oklch(0.5 0.02 150);
+  --accent: oklch(0.93 0.03 90);
+  --accent-foreground: oklch(0.3 0.03 60);
 
   --destructive: oklch(0.577 0.245 27.325);
   --destructive-foreground: oklch(0.985 0 0);
 
-  --border: oklch(0.922 0 0);
-  --input: oklch(0.922 0 0);
-  --ring: oklch(0.708 0 0);
+  --border: oklch(0.9 0.01 95);
+  --input: oklch(0.9 0.01 95);
+  --ring: oklch(0.6 0.08 155);
 
-  /* --- status colours (from the template's chart ramp, reused semantically) --- */
+  /* --- status colours --- */
   --success: oklch(0.55 0.14 150);
   --warning: oklch(0.769 0.188 70.08);
   --info: oklch(0.6 0.118 184.704);
+
+  /* --- accent glow (used sparingly: "why" reveal, hero accents) --- */
+  --glow: oklch(0.75 0.14 55);
+  --glow-foreground: oklch(0.3 0.1 55);
 
   /* --- geometry --- */
   --radius: 8px;
@@ -64,83 +67,85 @@
 }
 
 .dark {
-  --background: oklch(0.145 0 0);
-  --foreground: oklch(0.985 0 0);
-  --card: oklch(0.205 0 0);
-  --card-foreground: oklch(0.985 0 0);
+  --background: oklch(0.17 0.016 155);
+  --foreground: oklch(0.96 0.01 95);
+  --card: oklch(0.21 0.018 155);
+  --card-foreground: oklch(0.96 0.01 95);
 
-  /* In dark mode the template flips primary to near-white on near-black. */
-  --primary: oklch(0.922 0 0);
-  --primary-foreground: oklch(0.205 0 0);
+  --primary: oklch(0.72 0.1 155);
+  --primary-foreground: oklch(0.16 0.02 155);
 
-  --secondary: oklch(0.269 0 0);
-  --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.269 0 0);
-  --muted-foreground: oklch(0.708 0 0);
-  --accent: oklch(0.269 0 0);
-  --accent-foreground: oklch(0.985 0 0);
+  --secondary: oklch(0.27 0.018 155);
+  --secondary-foreground: oklch(0.96 0.01 95);
+  --muted: oklch(0.27 0.018 155);
+  --muted-foreground: oklch(0.7 0.015 100);
+  --accent: oklch(0.3 0.04 60);
+  --accent-foreground: oklch(0.9 0.03 70);
 
   --destructive: oklch(0.704 0.191 22.216);
   --destructive-foreground: oklch(0.145 0 0);
 
   --border: oklch(1 0 0 / 10%);
   --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.556 0 0);
+  --ring: oklch(0.62 0.1 155);
 
   --success: oklch(0.72 0.15 150);
   --warning: oklch(0.828 0.189 84.429);
   --info: oklch(0.696 0.17 162.48);
+
+  --glow: oklch(0.78 0.15 55);
+  --glow-foreground: oklch(0.88 0.08 60);
 }
 
-/*
- * sRGB fallbacks. The proposal targets low-to-mid range devices, some of which
- * ship older WebViews without oklch() support; without this block those render
- * with no colour at all rather than approximate colour.
- */
+/* sRGB fallbacks for older WebViews without oklch() support. */
 @supports not (color: oklch(0.5 0.1 200)) {
   :root {
-    --background: #ffffff;
-    --foreground: #0a0a0a;
+    --background: #fbfaf6;
+    --foreground: #1d2621;
     --card: #ffffff;
-    --card-foreground: #0a0a0a;
-    --primary: #f0e3c7;
-    --primary-foreground: #353025;
-    --secondary: #f5f5f5;
-    --secondary-foreground: #262626;
-    --muted: #f5f5f5;
-    --muted-foreground: #737373;
-    --accent: #f5f5f5;
-    --accent-foreground: #262626;
+    --card-foreground: #1d2621;
+    --primary: #4f7a63;
+    --primary-foreground: #f7f5ef;
+    --secondary: #f2f0ea;
+    --secondary-foreground: #26302a;
+    --muted: #f0efe8;
+    --muted-foreground: #6f7a72;
+    --accent: #f3e6d8;
+    --accent-foreground: #7a4a24;
     --destructive: #e40016;
     --destructive-foreground: #fafafa;
-    --border: #e5e5e5;
-    --input: #e5e5e5;
-    --ring: #a1a1a1;
+    --border: #e4e2d8;
+    --input: #e4e2d8;
+    --ring: #6f9c82;
     --success: #1c8742;
     --warning: #f69e00;
     --info: #009488;
+    --glow: #e8935a;
+    --glow-foreground: #7a4420;
   }
 
   .dark {
-    --background: #0a0a0a;
-    --foreground: #fafafa;
-    --card: #171717;
-    --card-foreground: #fafafa;
-    --primary: #e5e5e5;
-    --primary-foreground: #171717;
-    --secondary: #262626;
-    --secondary-foreground: #fafafa;
-    --muted: #262626;
-    --muted-foreground: #a1a1a1;
-    --accent: #262626;
-    --accent-foreground: #fafafa;
+    --background: #161b18;
+    --foreground: #f5f3ec;
+    --card: #1c2320;
+    --card-foreground: #f5f3ec;
+    --primary: #8fc2a3;
+    --primary-foreground: #142019;
+    --secondary: #2a322d;
+    --secondary-foreground: #f5f3ec;
+    --muted: #2a322d;
+    --muted-foreground: #a9b3ac;
+    --accent: #3a2c1e;
+    --accent-foreground: #e6b17e;
     --destructive: #ff6568;
     --destructive-foreground: #0a0a0a;
     --border: rgba(255, 255, 255, 0.1);
     --input: rgba(255, 255, 255, 0.15);
-    --ring: #8c8c8c;
+    --ring: #7fb695;
     --success: #53be70;
     --warning: #f6c000;
     --info: #2ec4a6;
+    --glow: #e8935a;
+    --glow-foreground: #f0c19a;
   }
 }
