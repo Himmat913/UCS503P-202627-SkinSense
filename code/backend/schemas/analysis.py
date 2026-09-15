@@ -39,12 +39,27 @@ class ManualInput(BaseModel):
 
 class PredictRequest(BaseModel):
     image_id: Optional[str] = None
+    skin_type: Optional[str] = None  # manual override, required alongside image_id
     manual: Optional[ManualInput] = None
+
+    @field_validator("skin_type")
+    @classmethod
+    def _valid_skin_type_override(cls, v: Optional[str]) -> Optional[str]:
+        if v is None:
+            return v
+        allowed = {"oily", "dry", "normal"}
+        if v not in allowed:
+            raise ValueError(f"skin_type must be one of {sorted(allowed)}")
+        return v
 
     @model_validator(mode="after")
     def _exactly_one_source(self) -> "PredictRequest":
         if bool(self.image_id) == bool(self.manual):
             raise ValueError("Provide exactly one of image_id or manual, not both or neither.")
+        if self.image_id and self.skin_type is None:
+            raise ValueError("skin_type is required alongside image_id — no skin-type model is trained yet.")
+        if self.manual is not None and self.skin_type is not None:
+            raise ValueError("skin_type override is only valid with image_id, not with manual.")
         return self
 
 

@@ -29,7 +29,23 @@ product_ingredient = Table(
     Column("ingredient_name", String(64), ForeignKey("ingredients.name"), primary_key=True),
 )
 
+class AnalysisResult(Base):
+    __tablename__ = "analysis_results"
 
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False, index=True)
+    image_id = Column(String(64), nullable=True)
+    skin_type = Column(String(16), nullable=False)
+    skin_type_confidence = Column(Float, nullable=False)
+    acne_severity = Column(String(16), nullable=False)
+    acne_severity_confidence = Column(Float, nullable=False)
+    lesion_count_estimate = Column(Integer, nullable=True)
+    source = Column(String(16), nullable=False)  # "model" | "stub" | "manual"
+    referral_needed = Column(Integer, nullable=False, default=0)
+    created_at = Column(DateTime, nullable=False, default=lambda: datetime.now(timezone.utc))
+
+    user = relationship("User", backref="analysis_results")
+    
 class Product(Base):
     __tablename__ = "products"
 

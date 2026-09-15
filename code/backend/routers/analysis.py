@@ -41,7 +41,13 @@ async def predict(payload: PredictRequest, user: User = Depends(get_current_user
         image_path = storage.path_for(payload.image_id)
         if image_path is None:
             raise HTTPException(status_code=404, detail=f"No stored image for image_id '{payload.image_id}'.")
-        result = inference.predict(image_path)
+        acne_result = inference.predict_acne(image_path)
+        result = {
+            "skin_type": payload.skin_type,
+            "skin_type_confidence": 1.0,
+            "skin_tone": None,
+            **acne_result,
+        }
         result["image_id"] = payload.image_id
 
     referral_result = referral.compute_referral(

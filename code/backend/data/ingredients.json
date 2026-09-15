@@ -39,7 +39,7 @@
     "name": "zinc oxide",
     "type": "Mineral UV filter",
     "role": "Broad-spectrum UV protection; also has mild anti-inflammatory properties.",
-    "caution": "Mineral formulas can leave a visible cast on deeper skin tones — tinted versions reduce this."
+    "caution": "Mineral formulas can leave a visible cast on deeper skin tones -- tinted versions reduce this."
   },
   {
     "name": "zinc pca",
@@ -68,7 +68,85 @@
   {
     "name": "fragrance",
     "type": "Additive",
-    "role": "Scent only — provides no skincare benefit.",
+    "role": "Scent only -- provides no skincare benefit.",
     "caution": "One of the most common contact allergens; always excluded when listed as an allergy."
+  },
+  {
+    "name": "citric acid",
+    "type": "AHA",
+    "role": "Mild exfoliant at higher concentrations; also used at low levels to adjust product pH.",
+    "caution": "Generally well tolerated at the low concentrations used in most formulas."
+  },
+  {
+    "name": "lactic acid",
+    "type": "AHA",
+    "role": "Exfoliates and supports the skin's natural moisture-retaining factors; gentler than glycolic acid.",
+    "caution": "Can irritate sensitive skin or a compromised skin barrier; introduce gradually."
+  },
+  {
+    "name": "glycolic acid",
+    "type": "AHA",
+    "role": "Chemical exfoliant that dissolves dead skin cells, improving texture and post-acne marks.",
+    "caution": "Can irritate sensitive skin or a compromised skin barrier; increases sun sensitivity."
+  },
+  {
+    "name": "mandelic acid",
+    "type": "AHA",
+    "role": "Gentle exfoliant and brightening agent; larger molecule size makes it milder than glycolic acid.",
+    "caution": "Can irritate sensitive skin or a compromised skin barrier, though less often than smaller AHAs."
+  },
+  {
+    "name": "phytic acid",
+    "type": "Chelating exfoliant",
+    "role": "Gentle exfoliant with antioxidant properties; helps brighten and even skin tone.",
+    "caution": "Generally well tolerated."
+  },
+  {
+    "name": "gluconolactone",
+    "type": "PHA",
+    "role": "Polyhydroxy acid; exfoliates the skin surface with less irritation than AHAs, suits sensitive skin.",
+    "caution": "Generally well tolerated, including on reactive skin."
+  },
+  {
+    "name": "tartaric acid",
+    "type": "AHA",
+    "role": "Exfoliant that supports skin-cell turnover and evens tone; often paired with other AHAs.",
+    "caution": "Can irritate a compromised skin barrier."
+  },
+  {
+    "name": "adenosine",
+    "type": "Soothing / anti-aging agent",
+    "role": "Calms and restores skin, with evidence for reducing fine lines and redness alongside acne.",
+    "caution": "Generally well tolerated."
+  },
+  {
+    "name": "sodium ascorbyl phosphate",
+    "type": "Vitamin C derivative",
+    "role": "Stable form of vitamin C; brightens tone and has mild antimicrobial benefits against acne bacteria.",
+    "caution": "Generally well tolerated; more stable than pure ascorbic acid."
+  },
+  {
+    "name": "zinc gluconate",
+    "type": "Sebum regulator",
+    "role": "Zinc salt with anti-inflammatory and oil-regulating properties, similar to zinc PCA.",
+    "caution": "Generally well tolerated."
+  },
+  {
+    "name": "sulfur",
+    "type": "Antimicrobial / keratolytic",
+    "role": "Long-used acne ingredient; calms inflammation and has mild antibacterial and exfoliating action.",
+    "caution": "Strong smell; can be drying at higher concentrations."
+  },
+  {
+    "name": "lactobacillus ferment",
+    "type": "Probiotic / prebiotic",
+    "role": "Supports a balanced skin microbiome, which can help calm acne-related redness over time.",
+    "caution": "Generally well tolerated."
+  },
+  {
+    "name": "bifida ferment lysate",
+    "type": "Probiotic / prebiotic",
+    "role": "Supports skin barrier health and a balanced microbiome; often paired with other calming ingredients.",
+    "caution": "Generally well tolerated."
   }
 ]

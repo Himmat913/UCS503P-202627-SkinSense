@@ -7,6 +7,8 @@ pydantic[email]==2.10.4
 
 # Database
 sqlalchemy==2.0.36
+psycopg2-binary==2.9.10
+alembic==1.14.0
 
 # Auth
 passlib==1.7.4
@@ -17,12 +19,10 @@ python-jose[cryptography]==3.3.0
 pytest==8.3.4
 httpx==0.28.1
 
-# --- ML stack (needed once real model checkpoints are added) ---
-# Not required to run the API in stub mode. Install these before dropping in
-# resnet50_acne.pt / mobilenetv2_skintype.pt.
-# torch==2.5.1
-# torchvision==0.20.1
-# Pillow==11.0.0
+# --- ML stack 
+torch==2.5.1
+torchvision==0.20.1
+Pillow==11.0.0
 
-# --- Photo validation (Muskan, W6) ---
+# --- Photo validation ---
 # mediapipe==0.10.18
