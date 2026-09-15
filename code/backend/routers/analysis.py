@@ -1,15 +1,10 @@
-"""
-POST /api/upload and POST /api/predict.
+"""POST /api/upload and POST /api/predict."""
+from fastapi import APIRouter, Depends, HTTPException, UploadFile, File
 
-Ownership: Himant (backend integration lead). Shapes are frozen per
-docs/planning/work-division.md §4.3.
-"""
-from __future__ import annotations
-
-from fastapi import APIRouter, HTTPException, UploadFile, File
-
+from db.models import User
 from schemas.analysis import PredictRequest, PredictResponse, UploadResponse, ValidationResult
 from services import storage, inference, referral, photo_validation
+from services.auth import get_current_user
 from config import MAX_UPLOAD_BYTES
 
 router = APIRouter(prefix="/api", tags=["analysis"])
@@ -18,11 +13,10 @@ ALLOWED_CONTENT_TYPES = {"image/jpeg", "image/png", "image/webp"}
 
 
 @router.post("/upload", response_model=UploadResponse)
-async def upload_photo(file: UploadFile = File(...)):
+async def upload_photo(file: UploadFile = File(...), user: User = Depends(get_current_user)):
     if file.content_type not in ALLOWED_CONTENT_TYPES:
         raise HTTPException(status_code=400, detail="File must be a JPG, PNG, or WEBP image.")
 
-    # Peek the size without fully trusting the client-reported content-length.
     contents = await file.read()
     if len(contents) > MAX_UPLOAD_BYTES:
         raise HTTPException(status_code=400, detail="Image exceeds the 10 MB limit.")
@@ -39,7 +33,7 @@ async def upload_photo(file: UploadFile = File(...)):
 
 
 @router.post("/predict", response_model=PredictResponse)
-async def predict(payload: PredictRequest):
+async def predict(payload: PredictRequest, user: User = Depends(get_current_user)):
     if payload.manual is not None:
         result = inference.predict_manual(payload.manual.skin_type, payload.manual.acne_severity)
         result["image_id"] = None

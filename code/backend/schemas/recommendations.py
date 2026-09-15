@@ -1,13 +1,4 @@
-"""
-Request/response schemas for POST /api/recommendations.
-
-Shapes are frozen per docs/planning/work-division.md §4.1 — the frontend's
-src/api/client.js and src/api/mock.js already assume exactly this shape, so
-changing a field name here breaks the frontend silently. Change the contract
-in the planning doc first, then here, then in the frontend.
-"""
-from __future__ import annotations
-
+"""Request/response schemas for POST /api/recommendations and GET /api/ingredients."""
 from typing import Optional
 from pydantic import BaseModel, Field, field_validator
 

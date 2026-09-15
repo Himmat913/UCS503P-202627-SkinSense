@@ -1,21 +1,12 @@
-"""
-Builds the AM/PM routine from a filtered, ranked candidate list.
-
-Canonical step order, both halves of the day:
-  cleanser -> toner -> treatment -> serum -> moisturiser -> sunscreen
-Sunscreen is AM-only regardless of its catalog tag (it belongs nowhere else).
-Everything else follows the product's step_time tag, unless a conflict
-resolution pinned it to a specific slot (rules.conflict_filter).
-"""
-from __future__ import annotations
-
+"""Builds the AM/PM routine from a filtered, ranked candidate list. Canonical
+step order: cleanser -> toner -> treatment -> serum -> moisturiser -> sunscreen.
+Sunscreen is always AM-only regardless of its catalog tag."""
 from recommendations.rules import Candidate
 
 STEP_ORDER = ["cleanser", "toner", "treatment", "serum", "moisturiser", "sunscreen"]
 
 
 def _slot_for(candidate: Candidate) -> list[str]:
-    """Which half-day(s) this product belongs in, after conflict pinning."""
     if candidate.category == "sunscreen":
         return ["am"]
     if candidate.forced_time:

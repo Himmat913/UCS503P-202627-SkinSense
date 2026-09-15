@@ -1,13 +1,5 @@
-"""
-Seeds the database from data/*.json. Idempotent — re-running it updates
-existing rows rather than duplicating them, so it's safe to call after every
-catalog edit (UC-0006) without wiping history.
-
-Run directly:  python -m db.seed
-Or imported:   from db.seed import run_seed; run_seed()
-"""
-from __future__ import annotations
-
+"""Seeds the database from data/*.json. Idempotent — safe to re-run after a
+catalog edit. Run directly: python -m db.seed"""
 import json
 from pathlib import Path
 
@@ -18,8 +10,7 @@ DATA_DIR = Path(__file__).resolve().parent.parent / "data"
 
 
 class SeedValidationError(Exception):
-    """Raised when a catalog entry fails the rules UC-0006 enforces at write
-    time — kept as a real exception (not just a print) so CI can catch it."""
+    pass
 
 
 def _load(name: str) -> list[dict]:
@@ -29,8 +20,8 @@ def _load(name: str) -> list[dict]:
 
 
 def _validate_conflict(row: dict) -> None:
-    # This is the one rule that matters most: every conflict rule must be
-    # sourced, or the engine's "deterministic and traceable" argument breaks.
+    # Every conflict rule must cite a source, or the engine's "deterministic
+    # and traceable" property doesn't hold.
     if not row.get("source", "").strip():
         raise SeedValidationError(
             f"Conflict pair {row.get('ingredient_a')} / {row.get('ingredient_b')} "
@@ -43,7 +34,6 @@ def run_seed() -> dict:
     counts = {"ingredients": 0, "products": 0, "conflicts": 0}
 
     with session_scope() as session:
-        # ---- ingredients first (products and conflicts both reference them)
         for row in _load("ingredients.json"):
             existing = session.get(Ingredient, row["name"])
             if existing:
@@ -58,7 +48,6 @@ def run_seed() -> dict:
             counts["ingredients"] += 1
         session.flush()
 
-        # ---- products
         ingredient_cache = {i.name: i for i in session.query(Ingredient).all()}
         for row in _load("products.json"):
             existing = session.get(Product, row["id"])
@@ -82,8 +71,7 @@ def run_seed() -> dict:
             counts["products"] += 1
         session.flush()
 
-        # ---- conflict pairs (validated — see _validate_conflict)
-        session.query(IngredientConflict).delete()  # small table, full replace is simplest
+        session.query(IngredientConflict).delete()
         for row in _load("conflicts.json"):
             _validate_conflict(row)
             session.add(IngredientConflict(

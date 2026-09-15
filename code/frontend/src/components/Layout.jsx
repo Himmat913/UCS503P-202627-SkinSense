@@ -1,8 +1,10 @@
-import { Link, NavLink, useLocation } from "react-router-dom";
+import { Link, NavLink, useLocation, useNavigate } from "react-router-dom";
 
 import DemoBanner from "./DemoBanner";
 import ThemeToggle from "./ThemeToggle";
+import { UserIcon } from "./Icons";
 import { useAnalysis } from "../context/AnalysisContext";
+import { useAuth } from "../context/AuthContext";
 
 const NAV = [
   { to: "/", label: "Analyse", end: true },
@@ -14,6 +16,13 @@ const NAV = [
 export default function Layout({ children }) {
   const { pathname } = useLocation();
   const { reset } = useAnalysis();
+  const { isLoggedIn, user, logout } = useAuth();
+  const navigate = useNavigate();
+
+  async function handleLogout() {
+    await logout();
+    reset();
+  }
 
   return (
     <div className="app-shell">
@@ -40,11 +49,28 @@ export default function Layout({ children }) {
           </nav>
 
           <div className="row" style={{ gap: "0.5rem" }}>
-            {pathname !== "/" && (
+            {isLoggedIn && pathname !== "/" && (
               <Link to="/" className="btn btn-ghost btn-sm" onClick={reset}>
                 New scan
               </Link>
             )}
+
+            {isLoggedIn ? (
+              <div className="row" style={{ gap: "0.4rem" }}>
+                <span className="badge" title={user?.email}>
+                  <UserIcon size={13} />
+                  {user?.email?.split("@")[0] || "Account"}
+                </span>
+                <button type="button" className="btn btn-ghost btn-sm" onClick={handleLogout}>
+                  Log out
+                </button>
+              </div>
+            ) : (
+              <button type="button" className="btn btn-primary btn-sm" onClick={() => navigate("/login")}>
+                Log in
+              </button>
+            )}
+
             <ThemeToggle />
           </div>
         </div>

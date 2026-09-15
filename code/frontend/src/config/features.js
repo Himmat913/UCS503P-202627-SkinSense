@@ -1,15 +1,8 @@
 /**
- * Single source of truth for what is actually built.
- *
- * Every module in the proposal appears here. The UI reads `status` to decide
- * whether to show a "Preview" or "Planned" badge, so a demo can walk the whole
- * feature set without anyone mistaking fixture output for a working model.
- *
- * Update the status string as each module lands — nothing else needs changing.
- *
+ * Build status for every module in the app.
  *   live    — real implementation, wired end to end
  *   stub    — endpoint exists, returns placeholder data
- *   planned — no backend at all yet; the page runs on fixtures
+ *   planned — no backend yet; the page runs on fixtures
  */
 
 export const STATUS = {

@@ -1,29 +1,31 @@
 /**
  * API client for the SkinSense backend.
  *
- * Shapes match the frozen contract in docs/planning/work-division.md §4.3.
- *
- * Data source is controlled by VITE_DATA_SOURCE:
- *   auto   (default) — try the backend; fall back to fixtures if it's unreachable
+ * VITE_DATA_SOURCE controls the data source:
+ *   auto   (default) — try the backend; fall back to fixtures if unreachable
  *   api              — backend only; failures surface as errors
  *   mock             — fixtures only, never touches the network
  *
- * "auto" is what makes a demo survive a backend that isn't running yet. Every
- * fallback sets `usedMock`, and the UI shows a persistent banner when it fires —
- * fixture data is never presented as if it came from a model.
+ * Auth endpoints are never mocked, even in "auto" mode — a fake session is
+ * misleading in a way stub product data isn't.
  */
 
 import * as mock from "./mock";
+import * as auth from "../lib/auth";
 
 const BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://127.0.0.1:8000";
 const MODE = import.meta.env.VITE_DATA_SOURCE || "auto";
 
-/** Set true the first time a request falls back. Read by <DemoBanner>. */
 export const dataSource = { usedMock: false, lastError: null };
 
 function markMock(reason) {
   dataSource.usedMock = true;
   dataSource.lastError = reason;
+}
+
+let onSessionExpired = () => {};
+export function setOnSessionExpired(handler) {
+  onSessionExpired = handler;
 }
 
 export class ApiError extends Error {
@@ -47,7 +49,7 @@ async function readError(response) {
   return `Request failed (${response.status}).`;
 }
 
-async function request(path, options = {}) {
+async function rawRequest(path, options = {}) {
   let response;
   try {
     response = await fetch(`${BASE_URL}${path}`, options);
@@ -57,14 +59,59 @@ async function request(path, options = {}) {
   if (!response.ok) {
     throw new ApiError(await readError(response), response.status);
   }
+  if (response.status === 204) return null;
   return response.json();
 }
 
-/**
- * Runs the live call, falling back to the fixture in "auto" mode.
- * Only connection failures (status 0) and 404s fall back — a 400 or 500 is a
- * real bug and must not be hidden behind fixture data.
- */
+async function request(path, options = {}) {
+  return rawRequest(path, options);
+}
+
+async function authedRequest(path, options = {}) {
+  const attempt = () => {
+    const token = auth.getAccessToken();
+    const headers = { ...(options.headers || {}) };
+    if (token) headers.Authorization = `Bearer ${token}`;
+    return rawRequest(path, { ...options, headers });
+  };
+
+  if (!auth.getAccessToken()) {
+    throw new ApiError("Not logged in.", 401);
+  }
+
+  try {
+    return await attempt();
+  } catch (error) {
+    if (!(error instanceof ApiError) || error.status !== 401) throw error;
+
+    const refreshToken = auth.getRefreshToken();
+    if (!refreshToken) {
+      auth.clearSession();
+      onSessionExpired();
+      throw error;
+    }
+
+    try {
+      const refreshed = await rawRequest("/api/auth/refresh", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ refresh_token: refreshToken }),
+      });
+      auth.setSession({
+        accessToken: refreshed.access_token,
+        refreshToken: refreshed.refresh_token,
+        user: auth.getState().user,
+      });
+    } catch {
+      auth.clearSession();
+      onSessionExpired();
+      throw error;
+    }
+
+    return attempt();
+  }
+}
+
 async function withFallback(live, fixture) {
   if (MODE === "mock") {
     markMock("Running in fixture mode.");
@@ -85,14 +132,45 @@ async function withFallback(live, fixture) {
   }
 }
 
-/* ----------------------------------------------------------------- calls */
+export async function registerUser(email, password) {
+  const result = await request("/api/auth/register", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ email, password }),
+  });
+  auth.setSession({ accessToken: result.access_token, refreshToken: result.refresh_token, user: { email } });
+  return result;
+}
+
+export async function loginUser(email, password) {
+  const result = await request("/api/auth/login", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ email, password }),
+  });
+  auth.setSession({ accessToken: result.access_token, refreshToken: result.refresh_token, user: { email } });
+  return result;
+}
+
+export async function logoutUser() {
+  try {
+    await authedRequest("/api/auth/logout", { method: "POST" });
+  } finally {
+    auth.clearSession();
+  }
+}
+
+export async function fetchMe() {
+  const user = await authedRequest("/api/auth/me");
+  auth.setSession({ accessToken: auth.getAccessToken(), refreshToken: auth.getRefreshToken(), user });
+  return user;
+}
 
 export function uploadPhoto(file) {
   const body = new FormData();
   body.append("file", file);
-  // No Content-Type header — the browser sets the multipart boundary.
   return withFallback(
-    () => request("/api/upload", { method: "POST", body }),
+    () => authedRequest("/api/upload", { method: "POST", body }),
     () => mock.mockUpload(file),
   );
 }
@@ -100,7 +178,7 @@ export function uploadPhoto(file) {
 export function predictFromImage(imageId) {
   return withFallback(
     () =>
-      request("/api/predict", {
+      authedRequest("/api/predict", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ image_id: imageId }),
@@ -113,7 +191,7 @@ export function predictManual(skinType, acneSeverity) {
   const manual = { skin_type: skinType, acne_severity: acneSeverity };
   return withFallback(
     () =>
-      request("/api/predict", {
+      authedRequest("/api/predict", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ manual }),
@@ -125,7 +203,7 @@ export function predictManual(skinType, acneSeverity) {
 export function getRecommendations({ skinType, acneSeverity, allergies = [], budgetMax = null }) {
   return withFallback(
     () =>
-      request("/api/recommendations", {
+      authedRequest("/api/recommendations", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -139,7 +217,6 @@ export function getRecommendations({ skinType, acneSeverity, allergies = [], bud
   );
 }
 
-/** GET /api/ingredients — Ansh's catalog. Not built yet; fixture for now. */
 export function getIngredients() {
   return withFallback(
     () => request("/api/ingredients"),
@@ -147,7 +224,6 @@ export function getIngredients() {
   );
 }
 
-/** POST /api/feedback — pilot clarity ratings. Not built yet; fixture for now. */
 export function submitFeedback(payload) {
   return withFallback(
     () =>

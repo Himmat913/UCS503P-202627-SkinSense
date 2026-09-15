@@ -1,9 +1,5 @@
-"""
-Recommendation-engine tests. Ownership: Ansh. Runs against a fresh in-memory
-SQLite database seeded from the real data/*.json files, so these tests
-exercise the actual catalog, not a hand-built fixture — a bad entry in
-products.json fails a test here before it ever reaches a demo.
-"""
+"""Recommendation engine tests, run against an in-memory SQLite database
+seeded from the real data/*.json files."""
 import pytest
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
@@ -15,7 +11,6 @@ from recommendations.engine import get_recommendations, get_ingredients_catalog
 
 @pytest.fixture()
 def session(monkeypatch):
-    """Fresh in-memory DB per test, seeded from the real catalog files."""
     engine = create_engine("sqlite:///:memory:", connect_args={"check_same_thread": False})
     Base.metadata.create_all(bind=engine)
     TestSession = sessionmaker(bind=engine)
@@ -42,8 +37,6 @@ def test_returns_full_shape_even_with_no_matches(session):
 def test_matches_are_relevant_to_skin_type_and_severity(session):
     result = get_recommendations(session, skin_type="oily", acne_severity="severe")
     assert len(result["products"]) > 0
-    # every returned product must be tagged for oily + severe in the source catalog —
-    # verified indirectly: none of them should be dry-only products like the ceramide cream
     names = [p["name"] for p in result["products"]]
     assert "Ceramide Repair Cream" not in names
 
@@ -52,9 +45,8 @@ def test_allergy_filter_never_leaks(session):
     result = get_recommendations(session, skin_type="oily", acne_severity="moderate", allergies=["salicylic acid"])
     for product in result["products"]:
         assert "salicylic acid" not in [i.lower() for i in product["key_ingredients"]]
-    # and it should show up in excluded with a reason, since several oily/moderate products contain it
     excluded_names = [e["name"] for e in result["excluded"]]
-    assert any("Salicylic" in n or "salicylic" in n for n in excluded_names) or True  # allow catalog drift
+    assert any("Salicylic" in n or "salicylic" in n for n in excluded_names) or True
 
 
 def test_budget_filter_excludes_with_reason(session):
@@ -62,7 +54,6 @@ def test_budget_filter_excludes_with_reason(session):
     for product in result["products"]:
         assert product["price"] <= 300
     for excluded in result["excluded"]:
-        # every excluded item has a non-empty, specific reason
         assert excluded["reason"].strip() != ""
 
 
@@ -86,8 +77,6 @@ def test_sunscreen_is_always_am_only(session):
 
 
 def test_conflicting_pair_never_lands_in_the_same_routine_half(session):
-    # retinol + salicylic acid is an "avoid together" pair in conflicts.json —
-    # the lower-ranked one should be excluded outright, not merely separated
     result = get_recommendations(session, skin_type="oily", acne_severity="moderate", max_products=20)
     kept_ingredients_by_slot = {"am": set(), "pm": set()}
     for slot in ("am", "pm"):

@@ -1,32 +1,21 @@
-"""
-Filtering rules applied by the recommendation engine, in order:
-allergy exclusion -> budget ceiling -> ingredient-conflict resolution.
-
-Kept separate from engine.py so each rule is independently unit-testable
-(see tests/test_recommendations.py) — the engine's job is only to sequence
-these, not to contain the filtering logic itself.
-"""
-from __future__ import annotations
-
+"""Filtering rules applied by the recommendation engine, in order: allergy
+exclusion, budget ceiling, ingredient-conflict resolution."""
 from dataclasses import dataclass, field
 
 
 @dataclass
 class Candidate:
-    """A product carried through the filter pipeline, picking up a
-    match_score and a forced AM/PM slot (if a conflict resolution pins it)
-    along the way."""
     id: str
     name: str
     brand: str
     category: str
     price: int
     currency: str
-    step_time: str          # "am" | "pm" | "both" — from the catalog
+    step_time: str
     ingredient_names: list[str]
     base_reason: str
     match_score: float
-    forced_time: str | None = None   # set by conflict resolution when needed
+    forced_time: str | None = None
     reasons: list[str] = field(default_factory=list)
 
 
@@ -68,18 +57,11 @@ def conflict_filter(
     conflict_rows: list[dict],
 ) -> tuple[list[Candidate], list[Excluded]]:
     """
-    conflict_rows: [{ingredient_a, ingredient_b, severity, reason, handling}, ...]
-
-    "avoid together"  -> the lower-ranked product in the pair is dropped entirely.
-    "separate"        -> both are kept, but if both are tagged step_time="both"
-                          (or already pinned to the SAME single slot), the
-                          lower-ranked one is pinned to the opposite slot from
-                          the higher-ranked one so they never land in the same
-                          routine half. If they can't be separated (both fixed
-                          to the same single slot already), the lower-ranked
-                          one is dropped — a same-slot clash can't be resolved
-                          by timing alone.
-    "caution"         -> both kept unchanged; no forced separation.
+    "avoid together" drops the lower-ranked product in the pair.
+    "separate" pins the lower-ranked product to the opposite AM/PM slot from
+    the higher-ranked one; if both are already fixed to the same single slot,
+    the lower-ranked one is dropped instead.
+    "caution" changes nothing.
     """
     by_ingredient: dict[str, list[Candidate]] = {}
     for c in candidates:
@@ -111,7 +93,6 @@ def conflict_filter(
                     lower_slot = lower.forced_time or (lower.step_time if lower.step_time != "both" else None)
 
                     if higher_slot and lower_slot and higher_slot == lower_slot:
-                        # both pinned to the same single slot already — can't separate by timing
                         dropped_ids.add(lower.id)
                         dropped.append(Excluded(lower.id, lower.name, row["reason"] + " (could not be scheduled apart)"))
                         continue
@@ -120,7 +101,6 @@ def conflict_filter(
                         higher.forced_time = "am"
                     if lower.forced_time is None and lower.step_time == "both":
                         lower.forced_time = "pm" if higher.forced_time == "am" or higher_slot == "am" else "am"
-                # "caution": no action needed
 
     kept = [c for c in candidates if c.id not in dropped_ids]
     return kept, dropped

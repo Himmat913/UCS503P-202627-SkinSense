@@ -1,11 +1,4 @@
-"""
-Dermatologist-referral rule. Deliberately tiny and separate from
-inference.py — this is a policy decision (when do we tell someone to see a
-professional), not a model output, and policy should be easy to find and
-easy to change without touching inference code.
-"""
-from __future__ import annotations
-
+"""Dermatologist-referral rule."""
 from config import LOW_CONFIDENCE_THRESHOLD
 
 

@@ -1,18 +1,7 @@
-"""
-Request/response schemas for POST /api/upload and POST /api/predict.
-
-Shapes are frozen per docs/planning/work-division.md §4.3. The `manual` block
-is what powers the permanent no-photo fallback path in the frontend — it is
-not a temporary scaffolding measure, so its shape is held to the same
-stability bar as the rest of this contract.
-"""
-from __future__ import annotations
-
+"""Request/response schemas for POST /api/upload and POST /api/predict."""
 from typing import Optional
 from pydantic import BaseModel, Field, field_validator, model_validator
 
-
-# --------------------------------------------------------------- /api/upload
 
 class ValidationResult(BaseModel):
     ok: bool
@@ -26,8 +15,6 @@ class UploadResponse(BaseModel):
     filename: str
     validation: ValidationResult
 
-
-# -------------------------------------------------------------- /api/predict
 
 class ManualInput(BaseModel):
     skin_type: str
@@ -81,5 +68,5 @@ class PredictResponse(BaseModel):
     acne_severity_confidence: float
     lesion_count_estimate: Optional[int] = None
     skin_tone: Optional[SkinToneOut] = None
-    source: str  # "model" | "manual" | "stub"
+    source: str
     referral: ReferralOut

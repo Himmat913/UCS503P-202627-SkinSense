@@ -1,11 +1,3 @@
-"""
-Ownership: Muskan. These tests currently check the stub's contract shape
-only. When the real MediaPipe implementation replaces the stub, this file
-gets real assertions (rejection reasons for no-face / too-dark / etc. fixture
-images) — the shape checked here won't need to change, since the contract
-(work-division.md §4.2) is frozen regardless of which implementation is
-behind it.
-"""
 from services.photo_validation import validate_photo, VALIDATOR_VERSION
 
 
