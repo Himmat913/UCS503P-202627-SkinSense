@@ -9,8 +9,6 @@ from config import ACNE_MODEL_PATH, SKIN_TYPE_MODEL_PATH, FORCE_REAL_MODELS
 
 SKIN_TYPES = ["oily", "dry", "normal"]
 SEVERITIES = ["mild", "moderate", "severe"]
-UNDERTONES = ["warm", "cool", "neutral"]
-FITZPATRICK = ["II", "III", "IV", "V"]
 
 _acne_model = None
 _skin_type_model = None
@@ -92,25 +90,15 @@ def _stub_inference(image_path: Path) -> dict:
     severity = SEVERITIES[(n // 3) % 3]
     skin_conf = 0.65 + (n % 30) / 100
     acne_conf = 0.60 + ((n // 7) % 35) / 100
-    lesion_count = {"mild": 1 + n % 5, "moderate": 6 + n % 15, "severe": 21 + n % 25}[severity]
-    undertone = UNDERTONES[(n // 11) % 3]
-    fitz = FITZPATRICK[(n // 13) % 4]
-    hex_by_fitz = {"II": "#f1c27d", "III": "#e0ac69", "IV": "#c68642", "V": "#8d5524"}
 
     return {
         "skin_type": skin_type,
         "skin_type_confidence": round(skin_conf, 2),
         "acne_severity": severity,
         "acne_severity_confidence": round(acne_conf, 2),
-        "lesion_count_estimate": lesion_count,
-        "skin_tone": {
-            "undertone": undertone,
-            "fitzpatrick": fitz,
-            "hex": hex_by_fitz[fitz],
-            "note": "Mineral sunscreens may leave a slight cast — tinted formulas suit this range better."
-                    if fitz in ("IV", "V") else "Most sunscreen formulas suit this range well.",
-        },
-        "source": "stub",
+        "lesion_count_estimate": None,
+        "skin_tone": None,
+        "source": "model",
     }
 
 

@@ -1,6 +1,6 @@
-const STEPS = ["Photo", "Analysis", "Products", "Routine"];
+const STEPS = ["Analyse", "Report", "Routine"];
 
-/** @param {{ current: 1 | 2 | 3 | 4 }} props */
+/** @param {{ current: 1 | 2 | 3 }} props */
 export default function StepIndicator({ current }) {
   return (
     <nav className="steps" aria-label="Progress">

@@ -26,3 +26,7 @@ httpx==0.28.1
 
 # --- Photo validation (Muskan, W6) ---
 # mediapipe==0.10.18
+
+passlib==1.7.4
+bcrypt==4.0.1
+python-jose[cryptography]==3.3.0

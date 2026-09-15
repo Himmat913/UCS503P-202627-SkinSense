@@ -44,6 +44,13 @@ export const UploadIcon = (props) => (
   </Svg>
 );
 
+export const CameraIcon = (props) => (
+  <Svg size={28} {...props}>
+    <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" />
+    <circle cx="12" cy="13" r="4" />
+  </Svg>
+);
+
 export const AlertIcon = (props) => (
   <Svg size={18} {...props}>
     <circle cx="12" cy="12" r="10" />
@@ -55,6 +62,14 @@ export const InfoIcon = (props) => (
   <Svg size={18} {...props}>
     <circle cx="12" cy="12" r="10" />
     <path d="M12 16v-4M12 8h.01" />
+  </Svg>
+);
+
+export const HelpCircleIcon = (props) => (
+  <Svg size={14} {...props}>
+    <circle cx="12" cy="12" r="10" />
+    <path d="M9.1 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3" />
+    <path d="M12 17h.01" />
   </Svg>
 );
 
@@ -79,16 +94,15 @@ export const CheckIcon = (props) => (
   </Svg>
 );
 
-export const StarIcon = ({ filled = false, size = 24, ...props }) => (
-  <Svg size={size} fill={filled ? "currentColor" : "none"} {...props}>
-    <path d="m12 3 2.6 5.3 5.9.9-4.3 4.1 1 5.8-5.2-2.7-5.2 2.7 1-5.8L3.5 9.2l5.9-.9L12 3Z" />
+export const XIcon = (props) => (
+  <Svg size={12} {...props}>
+    <path d="M18 6 6 18M6 6l12 12" />
   </Svg>
 );
 
-export const FlaskIcon = (props) => (
-  <Svg size={18} {...props}>
-    <path d="M10 2v6.5L4.5 18A2 2 0 0 0 6.2 21h11.6a2 2 0 0 0 1.7-3L14 8.5V2" />
-    <path d="M8.5 2h7M7 14h10" />
+export const StarIcon = ({ filled = false, size = 24, ...props }) => (
+  <Svg size={size} fill={filled ? "currentColor" : "none"} {...props}>
+    <path d="m12 3 2.6 5.3 5.9.9-4.3 4.1 1 5.8-5.2-2.7-5.2 2.7 1-5.8L3.5 9.2l5.9-.9L12 3Z" />
   </Svg>
 );
 
@@ -103,5 +117,21 @@ export const UserIcon = (props) => (
   <Svg size={18} {...props}>
     <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
     <circle cx="12" cy="7" r="4" />
+  </Svg>
+);
+
+export const LogOutIcon = (props) => (
+  <Svg size={18} {...props}>
+    <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+    <path d="M16 17l5-5-5-5" />
+    <path d="M21 12H9" />
+  </Svg>
+);
+
+export const LayersIcon = (props) => (
+  <Svg size={18} {...props}>
+    <path d="m12 2 9 5-9 5-9-5 9-5Z" />
+    <path d="m3 12 9 5 9-5" />
+    <path d="m3 17 9 5 9-5" />
   </Svg>
 );

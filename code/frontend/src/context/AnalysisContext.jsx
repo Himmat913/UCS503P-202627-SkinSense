@@ -3,17 +3,24 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useState } 
 /**
  * Shared state across the flow.
  *
- * The analysis itself (prediction, recommendations, preview) is in memory only —
- * a stale prediction restored after a reload would be worse than none.
- *
- * The skin profile (allergies, budget) IS persisted, because it's a stable fact
- * about the user rather than the result of one scan.
+ * The analysis itself (prediction, recommendations, preview) is in memory
+ * only — a stale prediction restored after a reload would be worse than
+ * none. The skin profile (avoid list, budget, routine, last result) IS
+ * persisted, because it's a stable fact about the user rather than the
+ * result of one scan.
  */
 
 const AnalysisContext = createContext(null);
 const PROFILE_KEY = "skinsense-profile";
 
-const EMPTY_PROFILE = { allergies: [], budgetMax: null, notes: "" };
+const EMPTY_PROFILE = {
+  avoidIngredients: [],
+  budgetMax: null,
+  notes: "",
+  lastSkinType: null,
+  lastSeverity: null,
+  routine: null,
+};
 
 function loadProfile() {
   try {
