@@ -164,7 +164,7 @@ export function uploadPhoto(file) {
   );
 }
 
-export function predictFromImage(imageId) {
+export function predictFromImage(imageId, skinType) {
   return withFallback(
     () =>
       request(
@@ -172,7 +172,7 @@ export function predictFromImage(imageId) {
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ image_id: imageId }),
+          body: JSON.stringify({ image_id: imageId, skin_type: skinType }),
         },
         { authorized: true },
       ),

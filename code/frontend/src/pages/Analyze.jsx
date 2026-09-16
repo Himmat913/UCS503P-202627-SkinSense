@@ -99,7 +99,7 @@ export default function Analyze() {
     clearPhoto();
   }
 
-  async function handleAnalysePhoto() {
+    async function handleAnalysePhoto() {
     if (!file) return;
     setBusy("photo");
     setError(null);
@@ -113,9 +113,7 @@ export default function Analyze() {
         return;
       }
 
-      const result = await predictFromImage(upload.image_id);
-      result.skin_type = skinType;
-      result.skin_type_confidence = 1;
+      const result = await predictFromImage(upload.image_id, skinType);
       setPrediction(result);
       setProfile((prev) => ({
         ...prev,
