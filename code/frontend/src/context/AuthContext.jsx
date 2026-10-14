@@ -25,6 +25,7 @@ export function AuthProvider({ children }) {
 
   const register = useCallback(async (email, password) => {
     await registerUser(email, password);
+    await fetchMe().catch(() => {});
   }, []);
 
   const login = useCallback(async (email, password) => {
@@ -36,6 +37,7 @@ export function AuthProvider({ children }) {
       }
       throw err;
     }
+    await fetchMe().catch(() => {});
   }, []);
 
   const logout = useCallback(async () => {

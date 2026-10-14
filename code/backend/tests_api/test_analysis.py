@@ -65,8 +65,17 @@ def test_predict_requires_exactly_one_source(auth_headers):
 
 
 def test_predict_unknown_image_id_404s(auth_headers):
-    response = client.post("/api/predict", json={"image_id": "img_does_not_exist"}, headers=auth_headers)
+    response = client.post(
+        "/api/predict",
+        json={"image_id": "img_does_not_exist", "skin_type": "oily"},
+        headers=auth_headers,
+    )
     assert response.status_code == 404
+
+
+def test_predict_image_requires_skin_type(auth_headers):
+    response = client.post("/api/predict", json={"image_id": "img_x"}, headers=auth_headers)
+    assert response.status_code == 422
 
 
 def test_predict_from_uploaded_image_is_deterministic(auth_headers):
@@ -76,10 +85,12 @@ def test_predict_from_uploaded_image_is_deterministic(auth_headers):
         headers=auth_headers,
     )
     image_id = upload.json()["image_id"]
+    payload = {"image_id": image_id, "skin_type": "oily"}
 
-    first = client.post("/api/predict", json={"image_id": image_id}, headers=auth_headers).json()
-    second = client.post("/api/predict", json={"image_id": image_id}, headers=auth_headers).json()
+    first = client.post("/api/predict", json=payload, headers=auth_headers).json()
+    second = client.post("/api/predict", json=payload, headers=auth_headers).json()
 
+    assert first["skin_type"] == "oily"
     assert first["skin_type"] == second["skin_type"]
     assert first["acne_severity"] == second["acne_severity"]
-    assert first["source"] == "stub"
+    assert first["source"] in {"stub", "model"}

@@ -28,10 +28,6 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
-/*
- * The template sets ss02/ss03/ss04 on display text — that's what gives DM Sans
- * its single-storey 'a' and the look people recognise as Mainline.
- */
 h1,
 h2,
 h3,
@@ -76,7 +72,8 @@ button {
   cursor: pointer;
 }
 
-img {
+img,
+video {
   display: block;
   max-width: 100%;
 }
@@ -159,6 +156,18 @@ code,
   }
 }
 
+.grid-3 {
+  display: grid;
+  gap: 1.25rem;
+  grid-template-columns: 1fr;
+}
+
+@media (min-width: 860px) {
+  .grid-3 {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
 .muted {
   color: var(--muted-foreground);
 }
@@ -182,6 +191,21 @@ code,
   clip: rect(0, 0, 0, 0);
   white-space: nowrap;
   border: 0;
+}
+
+@keyframes enter-up {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.enter {
+  animation: enter-up 0.4s ease both;
 }
 
 @media (prefers-reduced-motion: reduce) {

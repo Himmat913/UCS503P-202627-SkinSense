@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
 
-import ModuleBadge, { ModuleNote } from "../components/ModuleBadge";
 import { CheckIcon, StarIcon } from "../components/Icons";
 import { submitFeedback } from "../api/client";
 import { useAnalysis } from "../context/AnalysisContext";
@@ -61,57 +60,31 @@ export default function Feedback() {
 
   return (
     <>
-      <header className="page-header">
-        <div className="row" style={{ justifyContent: "space-between" }}>
-          <h1>How clear were your results?</h1>
-          <ModuleBadge module="feedback" />
-        </div>
-        <p>
-          This 1–5 rating is collected during our pilot study and feeds into the final
-          evaluation report. Your response helps us measure whether the recommendation
-          explanations actually make sense to real users.
-        </p>
-        <ModuleNote module="feedback" />
+      <header className="page-header enter">
+        <h1>How clear were your results?</h1>
+        <p>Your rating helps us see whether the recommendations and their reasons actually make sense.</p>
       </header>
 
       {submitted ? (
         <div className="card" style={{ maxWidth: "540px" }}>
           <div className="card-body stack" style={{ alignItems: "center", padding: "2.5rem" }}>
-            <span style={{ fontSize: "2rem" }}>
-              <CheckIcon size={32} />
-            </span>
+            <CheckIcon size={32} />
             <h2>Thanks for your feedback</h2>
-            <p className="text-sm muted" style={{ textAlign: "center" }}>
-              Your rating and comment have been recorded. They'll appear in the final
-              report's pilot analysis.
-            </p>
-            <div className="row" style={{ marginTop: "0.75rem" }}>
-              <Link to="/" className="btn btn-primary">
-                Start a new scan
-              </Link>
-              <Link to="/about" className="btn btn-ghost">
-                View project info
-              </Link>
-            </div>
+            <p className="text-sm muted" style={{ textAlign: "center" }}>Your rating and comment have been recorded.</p>
+            <Link to="/" className="btn btn-primary" style={{ marginTop: "0.75rem" }}>Start a new scan</Link>
           </div>
         </div>
       ) : (
         <div className="card" style={{ maxWidth: "540px" }}>
           <div className="card-body stack-lg">
             <div className="field">
-              <label className="label">
-                How well did you understand why each product was recommended or excluded?
-              </label>
+              <label className="label">How well did you understand why each product was recommended or excluded?</label>
               <StarRating value={rating} onChange={setRating} />
-              <span className="hint">
-                1 = nothing made sense · 5 = every reason was clear
-              </span>
+              <span className="hint">1 = nothing made sense · 5 = every reason was clear</span>
             </div>
 
             <div className="field">
-              <label className="label" htmlFor="comment">
-                Anything you'd change?
-              </label>
+              <label className="label" htmlFor="comment">Anything you'd change?</label>
               <textarea
                 id="comment"
                 className="input"
@@ -127,10 +100,8 @@ export default function Feedback() {
               <div className="alert">
                 <div className="alert-body">
                   <span className="text-sm muted">
-                    Attached context: {prediction.skin_type} skin,{" "}
-                    {prediction.acne_severity} acne,{" "}
-                    {recommendations?.products?.length ?? "?"} products shown,
-                    engine {recommendations?.engine_version || "unknown"}.
+                    Attached context: {prediction.skin_type} skin, {prediction.acne_severity} acne,{" "}
+                    {recommendations?.products?.length ?? "?"} products shown.
                   </span>
                 </div>
               </div>
@@ -142,20 +113,8 @@ export default function Feedback() {
               </div>
             )}
 
-            <button
-              type="button"
-              className="btn btn-primary btn-lg"
-              disabled={rating === 0 || busy}
-              onClick={handleSubmit}
-            >
-              {busy ? (
-                <>
-                  <span className="spinner" aria-hidden="true" />
-                  Submitting…
-                </>
-              ) : (
-                "Submit feedback"
-              )}
+            <button type="button" className="btn btn-primary btn-lg" disabled={rating === 0 || busy} onClick={handleSubmit}>
+              {busy ? (<><span className="spinner" aria-hidden="true" />Submitting…</>) : "Submit feedback"}
             </button>
           </div>
         </div>
