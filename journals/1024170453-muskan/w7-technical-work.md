@@ -1,17 +1,19 @@
-# Week 7 : Backend, Database, and MST Prep
+# Week 7 : Frontend and Skin-Type Dataset
 
 ## Frontend Pages
 
-I finished out the remaining frontend pages — Profile, Ingredients, About, and Feedback — bringing the app to seven pages total alongside Upload, Results, and Recommendations. All of them follow the shadcn/Mainline theme so the styling stays consistent across the app.
+I finished the remaining pages (Profile, Ingredients, About and Feedback), which made seven pages in total alongside Upload, Results and Recommendations, all in the shadcn/Mainline theme.
 
-## API Client Improvements
+Later in the week I reworked the frontend into a shorter flow. Upload and Results were merged into one Analyze page, where the user can upload a photo or take one with the camera, pick a skin type, and add ingredients to avoid as tags. Recommendations became a Report page that shows the results with confidence, the filters, and a "Why this?" explanation on each product. I added a separate Routine page for the AM/PM routine, and removed the standalone Upload, Results, About and Ingredients pages. I also redid the base, theme and component styles to match.
 
-I added silent token refresh to the frontend API client, so an expired access token gets refreshed in the background using the refresh token instead of dropping the user back to login mid-session. I also kept the fixture-based fallback working across all seven pages, so the app stays demoable even if the backend is down.
+## API Client
+
+I added silent token refresh to the API client, so an expired access token is refreshed in the background with the refresh token and the user is not sent back to login. The client now sends `skin_type` along with the photo request, since the backend needs it while there is no skin-type model. The fixture fallback still works on every page, so the app can be demoed even if the backend is down.
 
 ## Skin-Type Dataset
 
-On the ML side, I kept working on the skin-type dataset for the MobileNetV2 classifier — the oily/dry/normal images collected and cleaned in W6 still need a full training run, so this week was about getting the dataset itself finalized and ready to train on: checking image counts per class, removing a few more duplicates that slipped through the first cleanup pass, and confirming the folder structure matches what the training script expects.
+I kept working on the skin-type dataset for the MobileNetV2 classifier. This week was about finalizing it: checking the image count per class, removing a few more duplicates that were missed in the first cleanup, and making sure the folder structure matches what the training notebook expects.
 
-## Notes for Next Week
+## Notes
 
-The dataset is ready; the actual MobileNetV2 training run and fusing it with the Likert questionnaire scoring are still open, and are the next ML task once the acne-model backend integration settles down.
+The dataset is ready. The MobileNetV2 training and combining it with the questionnaire scoring are still to do.

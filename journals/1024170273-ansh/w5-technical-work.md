@@ -12,4 +12,4 @@ I added the router and request/response schemas for the recommendation endpoint 
 
 I wrote the README run instructions covering environment setup, starting the backend and frontend locally, and the basic flow to verify a clean clone works end to end.
 
-No real rule-based logic (allergy exclusion, conflict detection, budget filtering) was implemented yet — that starts next week once the product/ingredient data is in place.
+No real rule-based logic (allergy exclusion, conflict detection, budget filtering) was implemented yet. That starts next week once the product/ingredient data is in place.

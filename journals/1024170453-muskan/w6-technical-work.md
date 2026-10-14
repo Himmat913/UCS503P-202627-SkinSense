@@ -2,24 +2,14 @@
 
 ## ResNet-50 Training Script and First Run
 
-I worked on the training side of the acne notebook alongside Himmat, once her preprocessed ACNE04 split and class-smoothing logic were ready to train against:
+I worked on the training side of the acne notebook with Himmat, using her preprocessed ACNE04 split and class smoothing. I wrote the training loop on an ImageNet-pretrained ResNet-50 with the last layer replaced by a 3-class severity head. For the loss I used weighted cross-entropy on top of the inverse-frequency smoothing, so the severe class, which is the smallest, still gets a useful gradient.
 
-- **Training script** — wrote the ResNet-50 training loop on top of an ImageNet-pretrained backbone, with the final layer swapped out for the 3-class severity head.
-- **Loss and class weighting** — used weighted cross-entropy on top of the inverse-frequency smoothing already applied to the class counts, so the severe class (the smallest one) still got a meaningful gradient signal.
-- **Kaggle setup** — ran the notebook on Kaggle with GPU T4×2 and Internet explicitly enabled in the commit dialog, and used Save Version → Save & Run All to commit the run properly rather than relying on interactive kernel state, since that gets lost if the laptop sleeps mid-run.
-- **First run and sanity checks** — got the first training run through to completion and checked the per-class confusion pattern, not just the overall accuracy, since a high headline number with the model only ever predicting "mild" would have been a red flag given the class imbalance.
-- **Baseline established** — this run gives us a number to beat with augmentation and loss-function experiments in the coming weeks, and confirms the ACNE04 pipeline produces correctly shaped, correctly labeled batches end to end.
+I ran it on Kaggle with GPU T4 x2 and Internet turned on, and used Save Version and Save & Run All so the run is committed and not lost if the laptop goes to sleep. The first run finished. I looked at the per-class confusion matrix and not only the overall accuracy, because with this much class imbalance a model that mostly predicts mild could still look fine on accuracy alone. This run is our baseline for the augmentation and loss experiments.
 
-## MobileNetV2 Training Script and First Run
+## Skin-Type Dataset
 
-I also wrote the training script for the MobileNetV2 skin-type classifier (oily vs. dry) once the cleaned dataset from the data-prep side was ready, and ran the first pass to get an initial accuracy baseline for the skin-type module.
+I collected and cleaned the images for the skin-type classifier (oily, dry and normal). I removed duplicates and kept a source log for the images I collected manually.
 
-## Real MediaPipe Validation
+## Notes
 
-Separately, I swapped the `ok: true` validation stub for the real `validate_photo` function using MediaPipe: actual face detection, lighting checks, and angle checks, with specific rejection reasons now returned to the frontend instead of a blanket pass/fail.
-
-## Notes for Next Week
-
-The ResNet-50 baseline and the confusion-pattern notes from this run are what W8's error-analysis task will build on, so I kept the run logs and per-class breakdown rather than just the final accuracy number.
-
-This week's focus was mostly on training — getting both the acne and skin-type notebooks past their first real runs — with the MediaPipe validation swap as the other piece of work.
+I saved the run logs and the per-class breakdown, so they can be used for error analysis later.

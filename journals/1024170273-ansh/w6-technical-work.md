@@ -1,4 +1,4 @@
-# Week 6 : Data Pipelines and First Training Run
+# Week 6 : Database and Recommendation Rules
 
 ## Database Models and Bootstrap
 
@@ -10,7 +10,7 @@ I seeded the catalog with an initial set of products (target of 40+), each tagge
 
 ## First Real Rule Pass
 
-I replaced the stub recommendation logic with the first real rule pass — matching by skin type and severity, plus allergy filtering — behind the same frozen function signature, so nothing on Himmat's or Muskan's side needed to change. The engine version flipped from `stub-0.1` to `rules-0.9`.
+I replaced the stub recommendation logic with the first real rule pass (matching by skin type and severity, plus allergy filtering) behind the same frozen function signature, so nothing on Himmat's or Muskan's side needed to change. The engine version flipped from `stub-0.1` to `rules-0.9`.
 
 ## Progress Report Skeleton
 
