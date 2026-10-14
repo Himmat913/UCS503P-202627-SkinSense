@@ -25,8 +25,7 @@ torchvision==0.20.1
 Pillow==11.0.0
 
 # --- Photo validation ---
-# mediapipe==0.10.18
-
-passlib==1.7.4
-bcrypt==4.0.1
-python-jose[cryptography]==3.3.0
+# 0.10.21 is the last release with the bundled-model `mp.solutions` API.
+# It needs numpy<2, so numpy is pinned explicitly.
+mediapipe==0.10.21
+numpy==1.26.4
