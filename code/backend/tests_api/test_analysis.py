@@ -4,6 +4,7 @@ from fastapi.testclient import TestClient
 from PIL import Image
 
 from main import app
+from services import photo_validation
 
 client = TestClient(app)
 
@@ -15,7 +16,18 @@ def _fake_jpeg(seed: int = 0) -> bytes:
     return buf.getvalue()
 
 
-def test_upload_accepts_valid_image(auth_headers):
+def _fake_validation(ok, reasons):
+    return lambda image_bytes: {
+        "ok": ok,
+        "reasons": reasons,
+        "checks": {},
+        "validator_version": "test",
+    }
+
+
+def test_upload_accepts_valid_image(auth_headers, monkeypatch):
+    # The real validator needs a real face photo; here we only test the endpoint.
+    monkeypatch.setattr(photo_validation, "validate_photo", _fake_validation(True, []))
     response = client.post(
         "/api/upload",
         files={"file": ("selfie.jpg", _fake_jpeg(), "image/jpeg")},
@@ -25,6 +37,21 @@ def test_upload_accepts_valid_image(auth_headers):
     body = response.json()
     assert body["image_id"].startswith("img_")
     assert body["validation"]["ok"] is True
+
+
+def test_upload_reports_validation_rejection(auth_headers, monkeypatch):
+    monkeypatch.setattr(
+        photo_validation, "validate_photo", _fake_validation(False, ["No face detected."])
+    )
+    response = client.post(
+        "/api/upload",
+        files={"file": ("selfie.jpg", _fake_jpeg(), "image/jpeg")},
+        headers=auth_headers,
+    )
+    assert response.status_code == 200
+    body = response.json()
+    assert body["validation"]["ok"] is False
+    assert body["validation"]["reasons"] == ["No face detected."]
 
 
 def test_upload_rejects_non_image(auth_headers):
