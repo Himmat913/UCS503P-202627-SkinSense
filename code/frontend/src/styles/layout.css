@@ -1,0 +1,294 @@
+/*
+ * Scrolling strategy: the document is the only scroll container. The header
+ * is sticky at the top; the recommendations sidebar is sticky inside its own
+ * grid row. Nothing sets a fixed height with overflow, so content never gets
+ * clipped and there is no nested scrolling.
+ */
+
+.app-shell {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+.site-main {
+  flex: 1;
+  outline: none;
+}
+
+.skip-link {
+  position: absolute;
+  left: 1rem;
+  top: -100px;
+  z-index: 100;
+  padding: 0.6rem 1rem;
+  border-radius: var(--r-btn);
+  background: var(--ink);
+  color: #fff;
+  font-family: var(--font-ui);
+  font-weight: 600;
+}
+
+.skip-link:focus {
+  top: 0.75rem;
+}
+
+/* ---------------------------------------------------------------- header */
+
+.site-header {
+  position: sticky;
+  top: 0;
+  z-index: 40;
+  background: rgb(255 250 245 / 0.92);
+  backdrop-filter: saturate(1.4) blur(10px);
+  -webkit-backdrop-filter: saturate(1.4) blur(10px);
+  border-bottom: 1px solid rgb(241 227 214 / 0.8);
+}
+
+.header-inner {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  min-height: var(--header-h);
+}
+
+.brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55rem;
+  color: var(--ink);
+  font-family: var(--font-head);
+  font-size: 1.6rem;
+  line-height: 1;
+  padding-top: 0.2rem;
+  flex-shrink: 0;
+}
+
+.brand-mark {
+  width: 34px;
+  height: 34px;
+  margin-top: -0.2rem;
+}
+
+.brand-small {
+  font-size: 1.4rem;
+}
+
+.primary-nav {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  margin-inline: auto;
+}
+
+.nav-link {
+  position: relative;
+  padding: 0.5rem 0.85rem;
+  color: var(--text);
+  font-size: 0.975rem;
+  border-radius: var(--r-btn);
+  transition: color 0.15s ease;
+}
+
+.nav-link:hover {
+  color: var(--ink);
+}
+
+.nav-link.is-active {
+  color: var(--ink);
+  font-weight: 500;
+}
+
+.nav-link.is-active::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  bottom: 0.15rem;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--rose);
+  transform: translateX(-50%);
+}
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-shrink: 0;
+}
+
+.avatar {
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: var(--pink-soft);
+  color: var(--ink);
+  font-family: var(--font-ui);
+  font-weight: 600;
+  transition: background 0.15s ease;
+}
+
+.avatar:hover {
+  background: #ffcfcf;
+}
+
+.icon-btn {
+  display: inline-grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border-radius: var(--r-btn);
+  color: var(--text);
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.icon-btn:hover:not(:disabled) {
+  background: var(--section);
+  color: var(--ink);
+}
+
+.icon-btn:disabled {
+  opacity: 0.45;
+}
+
+.header-actions .menu-toggle,
+.primary-nav .nav-mobile-actions {
+  display: none;
+}
+
+@media (max-width: 900px) {
+  .header-actions .menu-toggle {
+    display: inline-grid;
+  }
+
+  .header-actions .header-cta,
+  .header-actions .header-login,
+  .header-actions .header-logout {
+    display: none;
+  }
+
+  .primary-nav {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    display: none;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.25rem;
+    margin: 0;
+    padding: 0.75rem var(--gutter) 1.25rem;
+    background: var(--page);
+    border-bottom: 1px solid var(--line);
+    box-shadow: var(--shadow-float);
+  }
+
+  .primary-nav.is-open {
+    display: flex;
+  }
+
+  .nav-link {
+    padding: 0.8rem 0.75rem;
+    font-size: 1.05rem;
+  }
+
+  .nav-link.is-active {
+    background: var(--section);
+  }
+
+  .nav-link.is-active::after {
+    display: none;
+  }
+
+  .primary-nav .nav-mobile-actions {
+    display: grid;
+    gap: 0.5rem;
+    margin-top: 0.75rem;
+    padding-top: 0.75rem;
+    border-top: 1px solid var(--line);
+  }
+
+  .header-actions {
+    margin-left: auto;
+  }
+}
+
+/* ---------------------------------------------------------------- footer */
+
+.site-footer {
+  margin-top: var(--space-section);
+  background: var(--rose);
+  color: #fff;
+}
+
+.footer-inner {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 1.5rem;
+  padding-block: 2.5rem 2rem;
+}
+
+.footer-brand {
+  display: grid;
+  gap: 0.75rem;
+  max-width: 560px;
+}
+
+.footer-brand .brand {
+  color: #fff;
+}
+
+.footer-brand p {
+  color: #fff;
+  font-size: var(--step-small);
+  line-height: 1.6;
+}
+
+.footer-meta {
+  color: #fff1e2;
+  font-size: var(--step-tiny);
+}
+
+/* ------------------------------------------------------------ app pages */
+
+.page {
+  padding-block: clamp(1.5rem, 1rem + 2vw, 2.75rem) 0;
+}
+
+.page-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 1.25rem 2rem;
+  margin-bottom: 1.75rem;
+}
+
+.page-head h1 {
+  max-width: 18ch;
+}
+
+.page-head p {
+  max-width: 60ch;
+  margin-top: 0.6rem;
+  font-size: var(--step-lead);
+  line-height: 1.7;
+}
+
+.section-title {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.5rem 1.5rem;
+  margin-bottom: 1.25rem;
+}
+
+.section-title p {
+  font-size: var(--step-small);
+}

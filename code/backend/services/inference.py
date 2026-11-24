@@ -1,13 +1,19 @@
-"""Runs acne-severity inference on a stored image, using the real trained
-checkpoint when present, falling back to a deterministic, image-derived stub
-otherwise. Skin type is NOT model-predicted — no skin-type checkpoint is
-trained yet, so it's always supplied manually (see predict_manual and the
-skin_type field on PredictRequest), even when the acne read comes from a
-real photo. Set SKINSENSE_USE_REAL_MODELS=0 to force stub mode."""
+"""Runs acne-severity and skin-type inference on a stored image, using the real
+trained checkpoints when present.
+
+Acne severity falls back to a deterministic, image-derived stub when its
+checkpoint can't be loaded, so it is always available. Skin type has no such
+stub — a photo-based guess with no model behind it would be worse than asking
+the user — so predict_skin_type() returns None when its checkpoint, torch or
+mediapipe isn't available, or the stored image doesn't have exactly one
+detectable face, and the caller (routers/analysis.py) falls back to requiring
+skin_type in the request (see predict_manual and the skin_type field on
+PredictRequest). Set SKINSENSE_USE_REAL_MODELS=0 to force stub/fallback mode
+for both models."""
 import hashlib
 from pathlib import Path
 
-from config import ACNE_MODEL_PATH, FORCE_REAL_MODELS
+from config import ACNE_MODEL_PATH, FORCE_REAL_MODELS, SKIN_TYPE_MODEL_PATH
 
 SEVERITIES = ["mild", "moderate", "severe"]
 
@@ -101,8 +107,22 @@ def _try_load_acne_model() -> bool:
     return False
 
 
+def _load_upright_rgb(image_path: Path):
+    """Open the stored upload the way the user saw it.
+
+    Phone cameras often save pixels sideways and record the real orientation
+    in an EXIF tag. Browsers honour that tag in the preview, and
+    photo_validation applies it before running MediaPipe, so the model must
+    too or it grades a rotated face. Images with no orientation tag are
+    returned unchanged, so their tensors are identical to before.
+    """
+    from PIL import Image, ImageOps
+
+    with Image.open(image_path) as raw:
+        return ImageOps.exif_transpose(raw).convert("RGB")
+
+
 def _preprocess(image_path: Path):
-    from PIL import Image
     from torchvision import transforms
 
     transform = transforms.Compose([
@@ -110,7 +130,7 @@ def _preprocess(image_path: Path):
         transforms.ToTensor(),
         transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
     ])
-    image = Image.open(image_path).convert("RGB")
+    image = _load_upright_rgb(image_path)
     return transform(image).unsqueeze(0)
 
 
@@ -163,9 +183,136 @@ def predict_manual(skin_type: str, acne_severity: str) -> dict:
     return {
         "skin_type": skin_type,
         "skin_type_confidence": 1.0,
+        "skin_type_source": "manual",
         "acne_severity": acne_severity,
         "acne_severity_confidence": 1.0,
         "lesion_count_estimate": None,
         "skin_tone": None,
         "source": "manual",
     }
+
+# --------------------------------------------------------------------------------
+# Skin type (MobileNetV2, trained separately — see ml_models/skin_type/README.md)
+# --------------------------------------------------------------------------------
+
+_skin_model = None
+_skin_classes: list[str] | None = None
+_skin_preprocess_cfg: dict = {}
+_skin_load_attempted = False
+
+
+def _build_skin_type_model(num_classes: int):
+    """Must match the training notebook exactly: MobileNetV2, ImageNet-initialised,
+    classifier replaced with Dropout(0.3) + Linear(last_channel, num_classes)."""
+    from torchvision.models import mobilenet_v2
+    import torch.nn as nn
+
+    model = mobilenet_v2(weights=None)
+    model.classifier = nn.Sequential(nn.Dropout(0.3), nn.Linear(model.last_channel, num_classes))
+    return model
+
+
+def _try_load_skin_type_model() -> bool:
+    global _skin_model, _skin_classes, _skin_preprocess_cfg, _skin_load_attempted
+    if _skin_load_attempted:
+        return _skin_model is not None
+    _skin_load_attempted = True
+
+    if FORCE_REAL_MODELS is False:
+        return False
+    if not SKIN_TYPE_MODEL_PATH.exists():
+        return False
+
+    try:
+        import torch
+    except ImportError:
+        return False
+
+    try:
+        checkpoint = torch.load(SKIN_TYPE_MODEL_PATH, map_location="cpu", weights_only=False)
+    except Exception as exc:
+        print(f"[inference] Failed to read skin-type checkpoint file: {exc}")
+        return False
+
+    try:
+        classes = checkpoint["classes"]
+        state_dict = checkpoint["state_dict"]
+        model = _build_skin_type_model(num_classes=len(classes))
+        model.load_state_dict(state_dict)
+        model.eval()
+    except Exception as exc:
+        print(f"[inference] Skin-type checkpoint didn't match the expected format: {exc}")
+        return False
+
+    _skin_model = model
+    _skin_classes = list(classes)
+    _skin_preprocess_cfg = dict(checkpoint.get("preprocess") or {})
+    print(f"[inference] Loaded skin-type checkpoint. classes={_skin_classes} "
+          f"val_balanced_acc={checkpoint.get('val_balanced_acc')} "
+          f"test_balanced_acc={checkpoint.get('test_balanced_acc')}")
+    return True
+
+
+def _skin_type_tensor(image_path: Path, landmarks):
+    """Build the model input exactly like training: shared skin_preprocess, then plain
+    ToTensor + ImageNet normalize (the crop is already 224x224, so no resize here)."""
+    from torchvision import transforms
+    from services import skin_preprocess as sp
+
+    image = _load_upright_rgb(image_path)
+    sharpness_target = _skin_preprocess_cfg.get("sharpness_target")
+    crop = sp.preprocess(image, landmarks, sharpness_target=sharpness_target)
+
+    transform = transforms.Compose([
+        transforms.ToTensor(),
+        transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
+    ])
+    return transform(crop).unsqueeze(0)
+
+
+def _run_real_skin_type_inference(image_path: Path, landmarks) -> dict:
+    import torch
+
+    tensor = _skin_type_tensor(image_path, landmarks)
+    with torch.no_grad():
+        logits = _skin_model(tensor)
+        probs = torch.softmax(logits, dim=1)[0]
+        idx = int(torch.argmax(probs))
+        confidence = float(probs[idx])
+
+    return {
+        "skin_type": _skin_classes[idx],
+        "skin_type_confidence": round(confidence, 4),
+        "skin_type_source": "model",
+    }
+
+
+def predict_skin_type(image_path: Path) -> dict | None:
+    """Real skin-type inference, or None if it can't be run right now (no checkpoint,
+    torch/mediapipe unavailable, or the stored image has no single detectable face).
+
+    The caller must treat None as "ask the user for skin_type", not as an error to
+    surface directly — see routers/analysis.py.
+    """
+    if not _try_load_skin_type_model():
+        return None
+
+    from services import photo_validation
+
+    landmarks = photo_validation.get_face_landmarks(image_path.read_bytes())
+    if landmarks is None:
+        return None
+
+    try:
+        return _run_real_skin_type_inference(image_path, landmarks)
+    except Exception as exc:
+        print(f"[inference] Real skin-type inference failed: {exc}")
+        return None
+
+
+def skin_type_model_available() -> bool:
+    """Cheap capability check (does not force a load) — used by tests and, if needed,
+    a future "is the model up" indicator. Loading only happens on first real use."""
+    if FORCE_REAL_MODELS is False:
+        return False
+    return SKIN_TYPE_MODEL_PATH.exists()

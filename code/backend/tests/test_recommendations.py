@@ -99,3 +99,19 @@ def test_get_ingredients_catalog_every_conflict_has_a_source(session):
     for row in catalog["conflicts"]:
         assert row["reason"].strip() != ""
         assert row["handling"].strip() != ""
+
+def test_every_product_reports_its_step_time(session):
+    result = get_recommendations(session, skin_type="oily", acne_severity="moderate", max_products=20)
+    assert result["products"]
+    for product in result["products"]:
+        assert product["step_time"] in {"am", "pm", "both"}
+
+
+def test_routine_follows_canonical_step_order(session):
+    from recommendations.routine import STEP_ORDER
+
+    result = get_recommendations(session, skin_type="dry", acne_severity="mild", max_products=20)
+    category = {p["id"]: p["category"] for p in result["products"]}
+    for slot in ("am", "pm"):
+        positions = [STEP_ORDER.index(category[pid]) for pid in result["routine"][slot]]
+        assert positions == sorted(positions)

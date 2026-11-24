@@ -96,7 +96,7 @@ def get_recommendations(
         "products": [
             {
                 "id": c.id, "name": c.name, "brand": c.brand, "category": c.category,
-                "price": c.price, "currency": c.currency,
+                "price": c.price, "currency": c.currency, "step_time": c.step_time,
                 "key_ingredients": c.ingredient_names, "reasons": c.reasons,
                 "match_score": c.match_score,
             }

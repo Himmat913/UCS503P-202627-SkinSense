@@ -1,9 +1,13 @@
 """Builds the AM/PM routine from a filtered, ranked candidate list. Canonical
-step order: cleanser -> toner -> treatment -> serum -> moisturiser -> sunscreen.
-Sunscreen is always AM-only regardless of its catalog tag."""
+step order: cleanser -> toner -> face mask -> treatment -> serum -> eye cream
+-> moisturiser -> sunscreen. Sunscreen is always AM-only regardless of its
+catalog tag. Masks go on clean skin before actives; eye cream goes on before
+moisturiser so it isn't blocked by a heavier layer."""
 from recommendations.rules import Candidate
 
-STEP_ORDER = ["cleanser", "toner", "treatment", "serum", "moisturiser", "sunscreen"]
+STEP_ORDER = [
+    "cleanser", "toner", "face_mask", "treatment", "serum", "eye_cream", "moisturiser", "sunscreen",
+]
 
 
 def _slot_for(candidate: Candidate) -> list[str]:

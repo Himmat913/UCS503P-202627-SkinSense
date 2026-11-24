@@ -1,11 +1,13 @@
-"""POST /api/upload and POST /api/predict."""
+"""POST /api/upload, POST /api/predict and GET /api/analyses."""
 
-from fastapi import APIRouter, Depends, HTTPException, UploadFile, File
+from fastapi import APIRouter, Depends, HTTPException, Query, UploadFile, File
 
 from db.models import User, AnalysisResult
 from db.session import session_scope
 
 from schemas.analysis import (
+    AnalysisHistoryItem,
+    AnalysisHistoryResponse,
     PredictRequest,
     PredictResponse,
     UploadResponse,
@@ -84,10 +86,27 @@ async def predict(
 
         acne_result = inference.predict_acne(image_path)
 
+        if payload.skin_type is not None:
+            # Explicit override: always honoured, even if the model is also available.
+            skin_result = {
+                "skin_type": payload.skin_type,
+                "skin_type_confidence": 1.0,
+                "skin_type_source": "manual",
+            }
+        else:
+            skin_result = inference.predict_skin_type(image_path)
+            if skin_result is None:
+                raise HTTPException(
+                    status_code=409,
+                    detail=(
+                        "No skin-type model is available on the server right now. "
+                        "Include skin_type in the request to continue."
+                    ),
+                )
+
         result = {
-            "skin_type": payload.skin_type,
-            "skin_type_confidence": 1.0,
             "skin_tone": None,
+            **skin_result,
             **acne_result,
         }
 
@@ -113,6 +132,7 @@ async def predict(
             image_id=result["image_id"],
             skin_type=result["skin_type"],
             skin_type_confidence=result["skin_type_confidence"],
+            skin_type_source=result["skin_type_source"],
             acne_severity=result["acne_severity"],
             acne_severity_confidence=result["acne_severity_confidence"],
             lesion_count_estimate=result.get("lesion_count_estimate"),
@@ -126,3 +146,31 @@ async def predict(
     # RETURN RESULT TO FRONTEND
     # ---------------------------------------------------------
     return PredictResponse(**result)
+
+
+@router.get("/analyses", response_model=AnalysisHistoryResponse)
+def list_analyses(
+    limit: int = Query(default=20, ge=1, le=100),
+    user: User = Depends(get_current_user),
+):
+    """The signed-in user's saved analyses, newest first. Only ever returns
+    rows belonging to the caller."""
+    with session_scope() as session:
+        query = session.query(AnalysisResult).filter(AnalysisResult.user_id == user.id)
+        total = query.count()
+        rows = query.order_by(AnalysisResult.created_at.desc(), AnalysisResult.id.desc()).limit(limit).all()
+        items = [
+            AnalysisHistoryItem(
+                id=row.id,
+                created_at=row.created_at,
+                skin_type=row.skin_type,
+                skin_type_confidence=row.skin_type_confidence,
+                skin_type_source=row.skin_type_source,
+                acne_severity=row.acne_severity,
+                acne_severity_confidence=row.acne_severity_confidence,
+                source=row.source,
+                referral_needed=bool(row.referral_needed),
+            )
+            for row in rows
+        ]
+    return AnalysisHistoryResponse(items=items, total=total)

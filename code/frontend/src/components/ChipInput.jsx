@@ -2,12 +2,19 @@ import { useState } from "react";
 
 import { XIcon } from "./Icons";
 
-export default function ChipInput({ id, value, onChange, placeholder }) {
+export default function ChipInput({ id, value, onChange, placeholder, describedBy }) {
   const [draft, setDraft] = useState("");
 
   function commit() {
-    const next = draft.trim().toLowerCase();
-    if (next && !value.includes(next)) onChange([...value, next]);
+    const entries = draft
+      .split(",")
+      .map((entry) => entry.trim().toLowerCase())
+      .filter(Boolean);
+    const next = [...value];
+    for (const entry of entries) {
+      if (!next.includes(entry)) next.push(entry);
+    }
+    if (next.length !== value.length) onChange(next);
     setDraft("");
   }
 
@@ -20,17 +27,18 @@ export default function ChipInput({ id, value, onChange, placeholder }) {
     }
   }
 
-  function remove(chip) {
-    onChange(value.filter((entry) => entry !== chip));
-  }
-
   return (
     <div className="chip-input">
       {value.map((chip) => (
         <span className="chip" key={chip}>
-          {chip}
-          <button type="button" className="chip-remove" onClick={() => remove(chip)} aria-label={`Remove ${chip}`}>
-            <XIcon />
+          <span className="chip-text">{chip}</span>
+          <button
+            type="button"
+            className="chip-remove"
+            onClick={() => onChange(value.filter((entry) => entry !== chip))}
+            aria-label={`Remove ${chip}`}
+          >
+            <XIcon size={14} />
           </button>
         </span>
       ))}
@@ -41,7 +49,9 @@ export default function ChipInput({ id, value, onChange, placeholder }) {
         onChange={(event) => setDraft(event.target.value)}
         onKeyDown={handleKeyDown}
         onBlur={commit}
-        placeholder={value.length === 0 ? placeholder : ""}
+        placeholder={value.length === 0 ? placeholder : "Add another"}
+        aria-describedby={describedBy}
+        autoComplete="off"
       />
     </div>
   );

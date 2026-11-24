@@ -1,10 +1,10 @@
-import { createContext, useCallback, useContext, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 import * as auth from "../lib/auth";
-import { registerUser, loginUser, logoutUser, fetchMe, setOnSessionExpired, ApiError } from "../api/client";
+import { ApiError, fetchMe, loginUser, logoutUser, registerUser, setOnSessionExpired } from "../api/client";
+import { AuthContext } from "./contexts";
 
-const AuthContext = createContext(null);
 
 export function AuthProvider({ children }) {
   const [session, setSession] = useState(auth.getState);
@@ -13,14 +13,13 @@ export function AuthProvider({ children }) {
   useEffect(() => auth.subscribe(setSession), []);
 
   useEffect(() => {
-    setOnSessionExpired(() => navigate("/login"));
+    setOnSessionExpired(() => navigate("/login", { replace: true }));
   }, [navigate]);
 
   useEffect(() => {
-    if (auth.getAccessToken() && !session.user) {
+    if (auth.getAccessToken() && !auth.getState().user) {
       fetchMe().catch(() => {});
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const register = useCallback(async (email, password) => {
@@ -33,7 +32,7 @@ export function AuthProvider({ children }) {
       await loginUser(email, password);
     } catch (err) {
       if (err instanceof ApiError && err.status === 401) {
-        throw new Error("Incorrect email or password.");
+        throw new Error("That email and password don't match an account.", { cause: err });
       }
       throw err;
     }
@@ -42,26 +41,20 @@ export function AuthProvider({ children }) {
 
   const logout = useCallback(async () => {
     await logoutUser();
-    navigate("/login");
+    navigate("/login", { replace: true });
   }, [navigate]);
 
-  return (
-    <AuthContext.Provider
-      value={{
-        user: session.user,
-        isLoggedIn: Boolean(session.accessToken),
-        register,
-        login,
-        logout,
-      }}
-    >
-      {children}
-    </AuthContext.Provider>
+  const value = useMemo(
+    () => ({
+      user: session.user,
+      userId: session.user?.id != null ? String(session.user.id) : auth.userIdFromToken(session.accessToken),
+      isLoggedIn: Boolean(session.accessToken),
+      register,
+      login,
+      logout,
+    }),
+    [session, register, login, logout],
   );
-}
 
-export function useAuth() {
-  const context = useContext(AuthContext);
-  if (!context) throw new Error("useAuth must be used inside <AuthProvider>.");
-  return context;
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }

@@ -1,18 +1,28 @@
 import { useEffect, useRef, useState } from "react";
 
+/**
+ * Live front-camera view. The viewfinder uses the stream's own aspect ratio
+ * and is never cropped, so the captured photo matches what the user framed.
+ * The preview is mirrored like a mirror; the saved photo is mirrored the
+ * same way so it looks identical to what was on screen.
+ */
 export default function CameraCapture({ onCapture, onCancel }) {
   const videoRef = useRef(null);
   const streamRef = useRef(null);
   const [error, setError] = useState(null);
-  const [ready, setReady] = useState(false);
+  const [ratio, setRatio] = useState(null);
 
   useEffect(() => {
     let cancelled = false;
 
     async function start() {
+      if (!navigator.mediaDevices?.getUserMedia) {
+        setError("This browser can't open the camera here. Camera access needs HTTPS or localhost. Upload a photo instead.");
+        return;
+      }
       try {
         const stream = await navigator.mediaDevices.getUserMedia({
-          video: { facingMode: "user", width: { ideal: 720 }, height: { ideal: 720 } },
+          video: { facingMode: "user", width: { ideal: 1280 }, height: { ideal: 960 } },
           audio: false,
         });
         if (cancelled) {
@@ -20,13 +30,13 @@ export default function CameraCapture({ onCapture, onCancel }) {
           return;
         }
         streamRef.current = stream;
-        if (videoRef.current) {
-          videoRef.current.srcObject = stream;
-          await videoRef.current.play();
+        const video = videoRef.current;
+        if (video) {
+          video.srcObject = stream;
+          await video.play();
         }
-        setReady(true);
       } catch {
-        setError("Camera access was blocked or isn't available. Upload a photo instead.");
+        if (!cancelled) setError("Camera access was blocked or no camera was found. Allow access in your browser, or upload a photo instead.");
       }
     }
 
@@ -34,12 +44,18 @@ export default function CameraCapture({ onCapture, onCancel }) {
     return () => {
       cancelled = true;
       streamRef.current?.getTracks().forEach((track) => track.stop());
+      streamRef.current = null;
     };
   }, []);
 
+  function handleMetadata() {
+    const video = videoRef.current;
+    if (video?.videoWidth && video?.videoHeight) setRatio(video.videoWidth / video.videoHeight);
+  }
+
   function capture() {
     const video = videoRef.current;
-    if (!video) return;
+    if (!video?.videoWidth) return;
 
     const canvas = document.createElement("canvas");
     canvas.width = video.videoWidth;
@@ -51,35 +67,46 @@ export default function CameraCapture({ onCapture, onCancel }) {
 
     canvas.toBlob(
       (blob) => {
-        if (!blob) return;
-        onCapture(new File([blob], `capture-${Date.now()}.jpg`, { type: "image/jpeg" }));
+        if (!blob) {
+          setError("The photo couldn't be captured. Try again or upload a photo instead.");
+          return;
+        }
+        streamRef.current?.getTracks().forEach((track) => track.stop());
+        streamRef.current = null;
+        onCapture(new File([blob], `camera-${Date.now()}.jpg`, { type: "image/jpeg" }));
       },
       "image/jpeg",
       0.92,
     );
   }
 
+  if (error) {
+    return (
+      <div className="camera-message" role="alert">
+        <p>{error}</p>
+        <button type="button" className="btn btn-quiet btn-sm" onClick={onCancel}>
+          Upload a photo instead
+        </button>
+      </div>
+    );
+  }
+
   return (
-    <div className="camera-frame">
-      {error ? (
-        <div className="camera-fallback">
-          <span className="text-sm">{error}</span>
-          <button type="button" className="btn btn-outline btn-sm" onClick={onCancel}>
-            Back to upload
-          </button>
-        </div>
-      ) : (
-        <>
-          <video ref={videoRef} className="camera-video" playsInline muted />
-          <div className="camera-controls">
-            <button type="button" className="btn btn-ghost btn-sm" onClick={onCancel}>
-              Cancel
-            </button>
-            <button type="button" className="btn-shutter" onClick={capture} disabled={!ready} aria-label="Take photo" />
-            <span style={{ width: "3.5rem" }} aria-hidden="true" />
-          </div>
-        </>
-      )}
+    <div className="camera">
+      <div className="camera-frame" style={ratio ? { aspectRatio: String(ratio) } : undefined}>
+        <video ref={videoRef} className="camera-video" playsInline muted onLoadedMetadata={handleMetadata} />
+        {!ratio && <p className="camera-waiting">Starting camera…</p>}
+        <div className="camera-guide" aria-hidden="true" />
+      </div>
+      <div className="camera-controls">
+        <button type="button" className="btn btn-quiet btn-sm" onClick={onCancel}>
+          Cancel
+        </button>
+        <button type="button" className="shutter" onClick={capture} disabled={!ratio} aria-label="Take photo">
+          <span />
+        </button>
+        <span className="camera-tip">Face the light, look straight ahead</span>
+      </div>
     </div>
   );
 }

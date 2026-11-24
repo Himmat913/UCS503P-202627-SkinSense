@@ -1,4 +1,5 @@
-"""Request/response schemas for POST /api/upload and POST /api/predict."""
+"""Request/response schemas for POST /api/upload, POST /api/predict and GET /api/analyses."""
+from datetime import datetime
 from typing import Optional
 from pydantic import BaseModel, Field, field_validator, model_validator
 
@@ -39,7 +40,10 @@ class ManualInput(BaseModel):
 
 class PredictRequest(BaseModel):
     image_id: Optional[str] = None
-    skin_type: Optional[str] = None  # manual override, required alongside image_id
+    # Optional manual override for the image path. Omit it to let the skin-type model
+    # predict from the photo; the server falls back to requiring this (409) if no
+    # model is available right now. Always required (via ManualInput) on the no-photo path.
+    skin_type: Optional[str] = None
     manual: Optional[ManualInput] = None
 
     @field_validator("skin_type")
@@ -56,8 +60,6 @@ class PredictRequest(BaseModel):
     def _exactly_one_source(self) -> "PredictRequest":
         if bool(self.image_id) == bool(self.manual):
             raise ValueError("Provide exactly one of image_id or manual, not both or neither.")
-        if self.image_id and self.skin_type is None:
-            raise ValueError("skin_type is required alongside image_id — no skin-type model is trained yet.")
         if self.manual is not None and self.skin_type is not None:
             raise ValueError("skin_type override is only valid with image_id, not with manual.")
         return self
@@ -79,9 +81,27 @@ class PredictResponse(BaseModel):
     image_id: Optional[str] = None
     skin_type: str
     skin_type_confidence: float
+    skin_type_source: str  # "model" | "manual" — independent of acne severity's `source`
     acne_severity: str
     acne_severity_confidence: float
     lesion_count_estimate: Optional[int] = None
     skin_tone: Optional[SkinToneOut] = None
-    source: str
+    source: str  # acne severity's source: "model" | "stub" | "manual"
     referral: ReferralOut
+
+
+class AnalysisHistoryItem(BaseModel):
+    id: int
+    created_at: datetime
+    skin_type: str
+    skin_type_confidence: float
+    skin_type_source: str
+    acne_severity: str
+    acne_severity_confidence: float
+    source: str
+    referral_needed: bool
+
+
+class AnalysisHistoryResponse(BaseModel):
+    items: list[AnalysisHistoryItem]
+    total: int

@@ -1,14 +1,15 @@
 import { useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 
-import { AlertIcon } from "../components/Icons";
-import { useAuth } from "../context/AuthContext";
+import AuthLayout from "../components/AuthLayout";
+import Notice from "../components/Notice";
+import { useAuth } from "../context/useAuth";
 
 export default function Login() {
   const { login } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
-  const redirectTo = location.state?.from?.pathname || "/";
+  const redirectTo = location.state?.from?.pathname || "/analyze";
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -20,7 +21,7 @@ export default function Login() {
     setBusy(true);
     setError(null);
     try {
-      await login(email, password);
+      await login(email.trim(), password);
       navigate(redirectTo, { replace: true });
     } catch (err) {
       setError(err.message);
@@ -30,69 +31,62 @@ export default function Login() {
   }
 
   return (
-    <div className="stack-lg" style={{ maxWidth: "380px", margin: "3rem auto" }}>
-      <header className="page-header" style={{ textAlign: "center" }}>
-        <h1>Welcome back</h1>
-        <p>Log in to analyse your skin and get your routine.</p>
-      </header>
+    <AuthLayout
+      title="Welcome back"
+      intro="Log in to run a skin check and see your saved routine."
+      aside="Your preferences and past checks are waiting for you."
+    >
+      <form className="auth-fields" onSubmit={handleSubmit} noValidate={false}>
+        {error && <Notice tone="error">{error}</Notice>}
 
-      <form className="card" onSubmit={handleSubmit}>
-        <div className="card-body stack">
-          {error && (
-            <div className="alert alert-error" role="alert">
-              <span className="alert-icon">
-                <AlertIcon />
-              </span>
-              <span>{error}</span>
-            </div>
-          )}
-
-          <div className="field">
-            <label className="label" htmlFor="login-email">
-              Email
-            </label>
-            <input
-              id="login-email"
-              className="input"
-              type="email"
-              required
-              autoComplete="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-            />
-          </div>
-
-          <div className="field">
-            <label className="label" htmlFor="login-password">
-              Password
-            </label>
-            <input
-              id="login-password"
-              className="input"
-              type="password"
-              required
-              autoComplete="current-password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-            />
-          </div>
-
-          <button type="submit" className="btn btn-primary btn-lg btn-block" disabled={busy}>
-            {busy ? (
-              <>
-                <span className="spinner" aria-hidden="true" />
-                Logging in…
-              </>
-            ) : (
-              "Log in"
-            )}
-          </button>
-
-          <p className="text-sm muted" style={{ textAlign: "center" }}>
-            Don't have an account? <Link to="/register" className="link">Create one</Link>
-          </p>
+        <div className="field">
+          <label className="field-label" htmlFor="login-email">
+            Email
+          </label>
+          <input
+            id="login-email"
+            className="input"
+            type="email"
+            required
+            autoComplete="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+          />
         </div>
+
+        <div className="field">
+          <label className="field-label" htmlFor="login-password">
+            Password
+          </label>
+          <input
+            id="login-password"
+            className="input"
+            type="password"
+            required
+            autoComplete="current-password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+          />
+        </div>
+
+        <button type="submit" className="btn btn-primary btn-lg btn-block" disabled={busy}>
+          {busy ? (
+            <>
+              <span className="spinner" aria-hidden="true" />
+              Logging in…
+            </>
+          ) : (
+            "Log in"
+          )}
+        </button>
+
+        <p className="auth-switch">
+          New to SkinSense?{" "}
+          <Link to="/register" className="text-link">
+            Create an account
+          </Link>
+        </p>
       </form>
-    </div>
+    </AuthLayout>
   );
 }

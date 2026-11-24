@@ -8,7 +8,7 @@ from config import FRONTEND_ORIGINS, USING_DEV_JWT_SECRET
 from db.session import init_db
 from db.seed import run_seed
 
-from routers import health, analysis, recommendations, auth
+from routers import health, analysis, recommendations, auth, feedback, progress
 
 
 @asynccontextmanager
@@ -23,7 +23,7 @@ async def lifespan(app: FastAPI):
     yield
 
 
-app = FastAPI(title="SkinSense API", version="0.3.0", lifespan=lifespan)
+app = FastAPI(title="SkinSense API", version="0.4.0", lifespan=lifespan)
 
 app.add_middleware(
     CORSMiddleware,
@@ -37,3 +37,5 @@ app.include_router(health.router)
 app.include_router(auth.router)
 app.include_router(analysis.router)
 app.include_router(recommendations.router)
+app.include_router(feedback.router)
+app.include_router(progress.router)

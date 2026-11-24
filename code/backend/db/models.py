@@ -37,6 +37,7 @@ class AnalysisResult(Base):
     image_id = Column(String(64), nullable=True)
     skin_type = Column(String(16), nullable=False)
     skin_type_confidence = Column(Float, nullable=False)
+    skin_type_source = Column(String(16), nullable=False, server_default="manual")  # "model" | "manual"
     acne_severity = Column(String(16), nullable=False)
     acne_severity_confidence = Column(Float, nullable=False)
     lesion_count_estimate = Column(Integer, nullable=True)
@@ -45,7 +46,23 @@ class AnalysisResult(Base):
     created_at = Column(DateTime, nullable=False, default=lambda: datetime.now(timezone.utc))
 
     user = relationship("User", backref="analysis_results")
-    
+
+
+class Feedback(Base):
+    """A user's rating of how clearly a set of recommendations was explained."""
+    __tablename__ = "feedback"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False, index=True)
+    clarity_rating = Column(Integer, nullable=False)  # 1-5
+    comment = Column(Text, nullable=True)
+    skin_type = Column(String(16), nullable=True)
+    acne_severity = Column(String(16), nullable=True)
+    engine_version = Column(String(32), nullable=True)
+    product_count = Column(Integer, nullable=True)
+    created_at = Column(DateTime, nullable=False, default=lambda: datetime.now(timezone.utc))
+
+
 class Product(Base):
     __tablename__ = "products"
 

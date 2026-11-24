@@ -154,6 +154,25 @@ def _result(ok: bool, reasons: list, checks: dict, version: str = VALIDATOR_VERS
     return {"ok": ok, "reasons": reasons, "checks": checks, "validator_version": version}
 
 
+def get_face_landmarks(image_bytes: bytes) -> np.ndarray | None:
+    """Return the (468, 3) landmark array for an image with exactly one detectable
+    face, or None (unreadable file, no face, more than one face, or MediaPipe
+    unavailable). Reuses the same lazily-loaded FaceMesh as validate_photo.
+
+    For images that already passed validate_photo (the only images the app
+    calls this on), this should essentially always return landmarks — it is
+    not a second validation gate, just a way to get what validate_photo
+    computed internally and discarded, without changing its frozen contract.
+    """
+    rgb = _load_rgb(image_bytes)
+    if rgb is None:
+        return None
+    faces = _detect_faces(rgb)
+    if not faces or len(faces) != 1:
+        return None
+    return faces[0]
+
+
 def validate_photo(image_bytes: bytes) -> dict:
     checks: dict = {
         "face_count": None,

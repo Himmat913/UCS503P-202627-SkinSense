@@ -1,0 +1,84 @@
+/*
+ * Design tokens, taken from the "Furniture Ecommerce" Figma template
+ * (decoded from the .fig file) and scaled from its 1920px artboard to a
+ * 1240px content width. Values in comments are the Figma originals.
+ */
+
+:root {
+  /* Surfaces */
+  --page: #fffaf5; /* frame fill */
+  --surface: #ffffff;
+  --card: #fffaf5; /* product and testimonial cards */
+  --section: #fff1e2; /* product band, CTA block */
+  --line: #f1e3d6;
+  --line-strong: #e6d3c3;
+
+  /* Ink */
+  --ink: #000958; /* headings, feature titles */
+  --ink-2: #2c2e3f; /* FAQ heading, product links */
+  --text: #656689; /* product copy; 5.6:1 on --page */
+  --text-soft: #70798b; /* body copy; dividers at 50% */
+
+  /* Brand */
+  --rose: #d98585; /* sidebar, testimonial band, heading accents */
+  --rose-deep: #cf7878; /* footer bar */
+  --rose-ink: #b85d78; /* darkened #C96A86 so small text passes AA */
+  --raspberry: #cb296d; /* primary buttons */
+  --raspberry-deep: #b01f5b;
+  --teal: #30aeba; /* discount badge */
+  --teal-bright: #5bd6e2;
+  --yellow: #fabf3e; /* star, scribble */
+
+  /* Pastel tints (feature tiles, arches) */
+  --pink-soft: #ffdede;
+  --peach-soft: #ffecda;
+  --butter-soft: #fee8be;
+  --mint-soft: #def5f7;
+  --tint-pink: rgb(255 222 222 / 0.6);
+  --tint-butter: rgb(254 232 190 / 0.6);
+  --tint-mint: rgb(91 214 226 / 0.2);
+
+  /* Status */
+  --warning-bg: #fff4dc;
+  --warning-line: #f3d498;
+  --error: #b42343;
+  --error-bg: #fdecef;
+  --success: #1f7a52;
+
+  /* Type */
+  --font-hero: "Gravitas One", "Lalezar", Georgia, serif;
+  --font-head: "Lalezar", "Poppins", system-ui, sans-serif;
+  --font-ui: "Poppins", system-ui, sans-serif;
+  --font-body: "Roboto", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-button: "Montserrat", "Poppins", system-ui, sans-serif;
+
+  --step-hero: clamp(2.5rem, 1.35rem + 4.6vw, 5.4rem); /* 120px */
+  --step-h1: clamp(2.1rem, 1.5rem + 2.3vw, 3.25rem); /* 60-70px */
+  --step-h2: clamp(1.7rem, 1.35rem + 1.3vw, 2.4rem);
+  --step-h3: 1.375rem; /* Lalezar 24 card titles */
+  --step-lead: clamp(1.0625rem, 1rem + 0.3vw, 1.2rem); /* 22/40 */
+  --step-body: 1rem;
+  --step-small: 0.875rem;
+  --step-tiny: 0.8125rem;
+
+  /* Shape */
+  --r-btn: 10px;
+  --r-card: 20px;
+  --r-panel: 28px;
+  --r-section: 40px; /* 48 */
+  --r-pill: 999px;
+
+  /* Elevation */
+  --shadow-btn: 0 4px 28px rgb(203 41 109 / 0.25);
+  --shadow-card: 4px 4px 0 #ffead3;
+  --shadow-float: 0 22px 40px rgb(78 25 143 / 0.08);
+  --shadow-soft: 0 2px 12px rgb(0 9 88 / 0.06);
+
+  /* Layout */
+  --container: 1240px;
+  --gutter: clamp(1rem, 0.6rem + 2vw, 2rem);
+  --header-h: 72px;
+  --space-section: clamp(3.5rem, 2.5rem + 4vw, 6.5rem);
+
+  --ease: cubic-bezier(0.2, 0.7, 0.2, 1);
+}

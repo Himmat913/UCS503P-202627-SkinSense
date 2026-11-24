@@ -4,7 +4,7 @@ from fastapi.testclient import TestClient
 from PIL import Image
 
 from main import app
-from services import photo_validation
+from services import inference, photo_validation
 
 client = TestClient(app)
 
@@ -100,9 +100,65 @@ def test_predict_unknown_image_id_404s(auth_headers):
     assert response.status_code == 404
 
 
-def test_predict_image_requires_skin_type(auth_headers):
-    response = client.post("/api/predict", json={"image_id": "img_x"}, headers=auth_headers)
-    assert response.status_code == 422
+def test_predict_without_skin_type_falls_back_when_no_model(auth_headers, monkeypatch):
+    # No skin-type checkpoint in this test environment: omitting skin_type on an
+    # image prediction should ask the caller to supply it, not 500 or silently guess.
+    monkeypatch.setattr(photo_validation, "validate_photo", _fake_validation(True, []))
+    upload = client.post(
+        "/api/upload",
+        files={"file": ("selfie.jpg", _fake_jpeg(), "image/jpeg")},
+        headers=auth_headers,
+    )
+    image_id = upload.json()["image_id"]
+
+    response = client.post("/api/predict", json={"image_id": image_id}, headers=auth_headers)
+    assert response.status_code == 409
+    assert "skin-type model" in response.json()["detail"]
+
+
+def test_predict_uses_skin_type_model_when_available(auth_headers, monkeypatch):
+    # With a (fake) model available, image_id alone is enough — no skin_type needed.
+    monkeypatch.setattr(photo_validation, "validate_photo", _fake_validation(True, []))
+    monkeypatch.setattr(
+        inference,
+        "predict_skin_type",
+        lambda image_path: {"skin_type": "dry", "skin_type_confidence": 0.81, "skin_type_source": "model"},
+    )
+    upload = client.post(
+        "/api/upload",
+        files={"file": ("selfie.jpg", _fake_jpeg(), "image/jpeg")},
+        headers=auth_headers,
+    )
+    image_id = upload.json()["image_id"]
+
+    response = client.post("/api/predict", json={"image_id": image_id}, headers=auth_headers)
+    assert response.status_code == 200
+    body = response.json()
+    assert body["skin_type"] == "dry"
+    assert body["skin_type_confidence"] == 0.81
+    assert body["skin_type_source"] == "model"
+
+
+def test_predict_skin_type_override_wins_even_if_model_available(auth_headers, monkeypatch):
+    monkeypatch.setattr(photo_validation, "validate_photo", _fake_validation(True, []))
+    monkeypatch.setattr(
+        inference,
+        "predict_skin_type",
+        lambda image_path: {"skin_type": "dry", "skin_type_confidence": 0.81, "skin_type_source": "model"},
+    )
+    upload = client.post(
+        "/api/upload",
+        files={"file": ("selfie.jpg", _fake_jpeg(), "image/jpeg")},
+        headers=auth_headers,
+    )
+    image_id = upload.json()["image_id"]
+
+    response = client.post(
+        "/api/predict", json={"image_id": image_id, "skin_type": "oily"}, headers=auth_headers
+    )
+    body = response.json()
+    assert body["skin_type"] == "oily"
+    assert body["skin_type_source"] == "manual"
 
 
 def test_predict_from_uploaded_image_is_deterministic(auth_headers):

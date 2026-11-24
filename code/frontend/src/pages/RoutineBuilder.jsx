@@ -1,294 +1,337 @@
 import { useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 
+import Notice from "../components/Notice";
+import Segmented from "../components/Segmented";
 import StepIndicator from "../components/StepIndicator";
-import { CheckIcon } from "../components/Icons";
-import { useAnalysis } from "../context/AnalysisContext";
-
-const CATEGORY_ORDER = ["cleanser", "toner", "treatment", "serum", "moisturiser", "sunscreen"];
-const BASIC_CATEGORIES = new Set(["cleanser", "moisturiser", "sunscreen"]);
-const ADDON_CATEGORIES = ["toner", "serum", "treatment"];
-const CATEGORY_LABELS = {
-  cleanser: "Cleanser",
-  toner: "Toner",
-  treatment: "Treatment",
-  serum: "Serum",
-  moisturiser: "Moisturiser",
-  sunscreen: "Sunscreen",
-};
-const ADDON_HINTS = {
-  toner: "Preps skin after cleansing",
-  serum: "Targets a specific concern",
-  treatment: "Active ingredient for acne",
-};
-
-/** Returns [] (never throws) if a product's step_time is missing or unrecognized. */
-function compatibleSlots(product) {
-  if (product.category === "sunscreen") return ["am"];
-  if (product.step_time === "both") return ["am", "pm"];
-  if (product.step_time === "am" || product.step_time === "pm") return [product.step_time];
-  return [];
-}
-
-function buildSlotOptions(products) {
-  const map = {};
-  for (const product of products) {
-    for (const slot of compatibleSlots(product)) {
-      if (slot !== "am" && slot !== "pm") continue;
-      if (!map[product.category]) map[product.category] = { am: [], pm: [] };
-      map[product.category][slot].push(product);
-    }
-  }
-  for (const category of Object.keys(map)) {
-    map[category].am.sort((a, b) => (b.match_score ?? 0) - (a.match_score ?? 0));
-    map[category].pm.sort((a, b) => (b.match_score ?? 0) - (a.match_score ?? 0));
-  }
-  return map;
-}
-
-function categoryOptions(slotOptions, category) {
-  const entry = slotOptions[category];
-  if (!entry) return [];
-  const byId = new Map();
-  for (const product of [...entry.am, ...entry.pm]) byId.set(product.id, product);
-  return [...byId.values()].sort((a, b) => (b.match_score ?? 0) - (a.match_score ?? 0));
-}
+import { ProductArt } from "../components/Art";
+import { CheckIcon, MoonIcon, SunIcon } from "../components/Icons";
+import { useAnalysis } from "../context/useAnalysis";
+import { CATEGORY_ORDER, categoryMeta, formatPrice } from "../lib/skin";
+import {
+  BASIC_CATEGORIES as BASIC,
+  EXTRA_CATEGORIES as EXTRAS,
+  buildSlotOptions,
+  optionsFor,
+} from "../lib/routine";
 
 export default function RoutineBuilder() {
-  const { recommendations, setProfile } = useAnalysis();
+  const { recommendations, profile, setProfile } = useAnalysis();
 
   const products = useMemo(() => recommendations?.products || [], [recommendations]);
   const slotOptions = useMemo(() => buildSlotOptions(products), [products]);
 
-  const [timeScope, setTimeScope] = useState("both");
+  const [scope, setScope] = useState("both");
   const [depth, setDepth] = useState("basic");
-  const [addons, setAddons] = useState({ toner: false, serum: false, treatment: false });
+  const [extras, setExtras] = useState({});
   const [selection, setSelection] = useState({});
-  const [saved, setSaved] = useState(false);
-
-  function resolvedChoice(category) {
-    const options = categoryOptions(slotOptions, category);
-    if (options.length === 0) return null;
-    const chosenId = selection[category];
-    return options.find((p) => p.id === chosenId) || options[0];
-  }
+  const [savedAt, setSavedAt] = useState(null);
 
   if (!recommendations) {
     return (
-      <>
+      <div className="container page">
         <StepIndicator current={3} />
-        <div className="card">
-          <div className="empty">
-            <p>No recommendations loaded yet in this session.</p>
-            <p className="text-sm" style={{ marginTop: "0.5rem" }}>
-              Run a scan and open your report first — a page refresh clears this.
-            </p>
-            <Link to="/" className="btn btn-primary" style={{ marginTop: "1rem" }}>Start a scan</Link>
+        <div className="panel empty">
+          <div className="empty-art" aria-hidden="true">
+            <ProductArt category="cleanser" />
           </div>
-        </div>
-      </>
-    );
-  }
-
-  const activeSlots = timeScope === "both" ? ["am", "pm"] : [timeScope];
-  const hasSlot = (category) => activeSlots.some((slot) => slotOptions[category]?.[slot]?.length > 0);
-
-  const activeCategories = CATEGORY_ORDER.filter((category) => {
-    if (!slotOptions[category]) return false;
-    if (!BASIC_CATEGORIES.has(category) && (depth !== "custom" || !addons[category])) return false;
-    return hasSlot(category);
-  });
-
-  const am = [];
-  const pm = [];
-  for (const category of activeCategories) {
-    const chosen = resolvedChoice(category);
-    if (!chosen) continue;
-    for (const slot of activeSlots) {
-      const options = slotOptions[category][slot];
-      if (!options || options.length === 0) continue;
-      const product = options.some((p) => p.id === chosen.id) ? chosen : options[0];
-      (slot === "am" ? am : pm).push(product);
-    }
-  }
-  const byOrder = (a, b) => CATEGORY_ORDER.indexOf(a.category) - CATEGORY_ORDER.indexOf(b.category);
-  am.sort(byOrder);
-  pm.sort(byOrder);
-
-  const basicsShown = [...BASIC_CATEGORIES].filter((category) => slotOptions[category] && hasSlot(category));
-  const addonsShown = ADDON_CATEGORIES.filter((category) => slotOptions[category] && hasSlot(category));
-
-  function toggleAddon(category) {
-    setAddons((current) => ({ ...current, [category]: !current[category] }));
-  }
-
-  function saveRoutine() {
-    setProfile((prev) => ({
-      ...prev,
-      routine: {
-        am: am.map((p) => ({ id: p.id, name: p.name, category: p.category })),
-        pm: pm.map((p) => ({ id: p.id, name: p.name, category: p.category })),
-      },
-    }));
-    setSaved(true);
-    setTimeout(() => setSaved(false), 2000);
-  }
-
-  return (
-    <>
-      <StepIndicator current={3} />
-
-      <header className="page-header enter">
-        <h1>Build your routine</h1>
-        <p>Choose which part of the day you're planning, and how much you want in it.</p>
-      </header>
-
-      <div className="row" style={{ gap: "1.5rem", marginBottom: "1.5rem", flexWrap: "wrap" }}>
-        <div className="field" style={{ gap: "0.5rem" }}>
-          <label className="label">Which routine?</label>
-          <div className="segmented">
-            <button type="button" className={`segmented-btn ${timeScope === "am" ? "is-active" : ""}`} onClick={() => setTimeScope("am")}>
-              Morning
-            </button>
-            <button type="button" className={`segmented-btn ${timeScope === "pm" ? "is-active" : ""}`} onClick={() => setTimeScope("pm")}>
-              Evening
-            </button>
-            <button type="button" className={`segmented-btn ${timeScope === "both" ? "is-active" : ""}`} onClick={() => setTimeScope("both")}>
-              Both
-            </button>
-          </div>
-        </div>
-
-        <div className="field" style={{ gap: "0.5rem" }}>
-          <label className="label">How much?</label>
-          <div className="segmented">
-            <button type="button" className={`segmented-btn ${depth === "basic" ? "is-active" : ""}`} onClick={() => setDepth("basic")}>
-              Basic
-            </button>
-            <button type="button" className={`segmented-btn ${depth === "custom" ? "is-active" : ""}`} onClick={() => setDepth("custom")}>
-              Add extras
-            </button>
+          <h1>Run a skin check first</h1>
+          <p>
+            Your routine is built from the products recommended in your latest check. Results are cleared when
+            the page is refreshed, so start a new check to build one.
+          </p>
+          <div className="empty-actions">
+            <Link to="/analyze" className="btn btn-primary">
+              Start a skin check
+            </Link>
+            {profile.routine && (
+              <Link to="/profile" className="link-arrow">
+                See your saved routine
+              </Link>
+            )}
           </div>
         </div>
       </div>
+    );
+  }
 
-      <div className="grid-2" style={{ marginBottom: "1.5rem" }}>
-        <div className="card">
-          <div className="card-header"><h3 className="card-title">Your basics</h3></div>
-          <div className="card-body stack">
-            {basicsShown.length === 0 && <p className="text-sm muted">No basic-step products matched your filters for this time of day.</p>}
-            {basicsShown.map((category) => (
-              <StepPicker
-                key={category}
-                category={category}
-                options={categoryOptions(slotOptions, category)}
-                value={resolvedChoice(category)?.id || ""}
-                onChange={(id) => setSelection((s) => ({ ...s, [category]: id }))}
-              />
-            ))}
-          </div>
+  const activeSlots = scope === "both" ? ["am", "pm"] : [scope];
+  const fitsScope = (category) => activeSlots.some((slot) => slotOptions[category]?.[slot]?.length > 0);
+
+  function chosenFor(category) {
+    const options = optionsFor(slotOptions, category);
+    return options.find((p) => p.id === selection[category]) || options[0] || null;
+  }
+
+  const included = CATEGORY_ORDER.filter((category) => {
+    if (!slotOptions[category] || !fitsScope(category)) return false;
+    if (BASIC.includes(category)) return true;
+    return depth === "extras" && extras[category];
+  });
+
+  const steps = { am: [], pm: [] };
+  for (const category of included) {
+    const chosen = chosenFor(category);
+    for (const slot of activeSlots) {
+      const options = slotOptions[category][slot];
+      if (!options?.length) continue;
+      const product = options.some((p) => p.id === chosen.id) ? chosen : options[0];
+      steps[slot].push(product);
+    }
+  }
+
+  const basicsAvailable = BASIC.filter((c) => slotOptions[c] && fitsScope(c));
+  const extrasAvailable = EXTRAS.filter((c) => slotOptions[c] && fitsScope(c));
+  const missingBasics = BASIC.filter((c) => !basicsAvailable.includes(c));
+  const uniqueProducts = new Map([...steps.am, ...steps.pm].map((p) => [p.id, p]));
+  const total = [...uniqueProducts.values()].reduce((sum, p) => sum + (p.price || 0), 0);
+  const empty = steps.am.length === 0 && steps.pm.length === 0;
+
+  function save() {
+    const pick = (p) => ({ id: p.id, name: p.name, brand: p.brand, category: p.category, price: p.price });
+    const stamp = new Date().toISOString();
+    setProfile((prev) => ({
+      ...prev,
+      routine: { am: steps.am.map(pick), pm: steps.pm.map(pick), savedAt: stamp },
+    }));
+    setSavedAt(stamp);
+  }
+
+  function choose(category, id) {
+    setSelection((current) => ({ ...current, [category]: id }));
+    setSavedAt(null);
+  }
+
+  return (
+    <div className="container page">
+      <StepIndicator current={3} />
+
+      <header className="page-head">
+        <div>
+          <h1>
+            Build your <span className="accent">routine</span>
+          </h1>
+          <p>Start with the basics, then add extra steps if you want them. Changes show up straight away.</p>
         </div>
+      </header>
 
-        {depth === "custom" ? (
-          <div className="card">
-            <div className="card-header"><h3 className="card-title">Add extra steps</h3></div>
-            <div className="card-body">
-              {addonsShown.length === 0 && <p className="text-sm muted">No optional steps matched your filters for this time of day.</p>}
-              {addonsShown.map((category) => {
-                const options = categoryOptions(slotOptions, category);
+      <div className="routine-controls">
+        <div className="field">
+          <span className="field-label" id="scope-label">
+            Plan for
+          </span>
+          <Segmented
+            label="Plan for"
+            value={scope}
+            onChange={(value) => {
+              setScope(value);
+              setSavedAt(null);
+            }}
+            options={[
+              { value: "am", label: "Morning", icon: <SunIcon size={17} /> },
+              { value: "pm", label: "Evening", icon: <MoonIcon size={17} /> },
+              { value: "both", label: "Both" },
+            ]}
+          />
+        </div>
+        <div className="field">
+          <span className="field-label">Routine size</span>
+          <Segmented
+            label="Routine size"
+            value={depth}
+            onChange={(value) => {
+              setDepth(value);
+              setSavedAt(null);
+            }}
+            options={[
+              { value: "basic", label: "Basics only" },
+              { value: "extras", label: "Add extra steps" },
+            ]}
+          />
+        </div>
+      </div>
+
+      <div className="routine-layout">
+        <div className="routine-pickers">
+          <section className="panel" aria-labelledby="basics-heading">
+            <h2 id="basics-heading" className="panel-title">
+              The basics
+            </h2>
+            <p className="panel-sub">Cleanse, moisturise and protect. Pick a different product in any step.</p>
+            <div className="picker-list">
+              {basicsAvailable.map((category) => {
+                const options = optionsFor(slotOptions, category);
+                const chosen = chosenFor(category);
                 return (
-                  <div className="toggle-row" key={category}>
-                    <div className="toggle-copy">
-                      <span className="toggle-title">{CATEGORY_LABELS[category]}</span>
-                      <span className="text-sm muted">{ADDON_HINTS[category]}</span>
-                      {addons[category] && options.length > 1 && (
-                        <select
-                          className="select select-inline"
-                          style={{ marginTop: "0.35rem" }}
-                          value={resolvedChoice(category)?.id || ""}
-                          onChange={(event) => setSelection((s) => ({ ...s, [category]: event.target.value }))}
-                        >
-                          {options.map((product) => (
-                            <option key={product.id} value={product.id}>{product.name}</option>
-                          ))}
-                        </select>
-                      )}
-                    </div>
-                    <button
-                      type="button"
-                      className={`toggle ${addons[category] ? "is-on" : ""}`}
-                      role="switch"
-                      aria-checked={addons[category]}
-                      aria-label={`Add ${CATEGORY_LABELS[category]}`}
-                      onClick={() => toggleAddon(category)}
-                    />
+                  <div key={category} className="picker">
+                    <label className="field-label" htmlFor={`pick-${category}`}>
+                      {categoryMeta(category).label}
+                    </label>
+                    {options.length > 1 ? (
+                      <select
+                        id={`pick-${category}`}
+                        className="select"
+                        value={chosen?.id || ""}
+                        onChange={(event) => choose(category, event.target.value)}
+                      >
+                        {options.map((p) => (
+                          <option key={p.id} value={p.id}>
+                            {p.name} ({formatPrice(p.price, p.currency)})
+                          </option>
+                        ))}
+                      </select>
+                    ) : (
+                      <p className="picker-single" id={`pick-${category}`}>
+                        {chosen?.name}
+                      </p>
+                    )}
                   </div>
                 );
               })}
             </div>
-          </div>
-        ) : (
-          <div className="card">
-            <div className="card-body empty">
-              <p>Switch to "Add extras" to layer on a toner, serum, or treatment.</p>
-            </div>
-          </div>
-        )}
-      </div>
+            {missingBasics.length > 0 && (
+              <div className="picker-missing">
+                <Notice tone="info" title={basicsAvailable.length === 0 ? "No basic steps matched" : undefined}>
+                  <p>
+                    No {missingBasics.map((c) => categoryMeta(c).label.toLowerCase()).join(" or ")} in the catalogue
+                    matched your skin profile and filters for this time of day.
+                  </p>
+                  <p>
+                    {depth === "basic" && extrasAvailable.length > 0 ? (
+                      <>
+                        <button type="button" className="text-link link-button" onClick={() => setDepth("extras")}>
+                          Add extra steps
+                        </button>{" "}
+                        to use the products that did match, or{" "}
+                      </>
+                    ) : (
+                      "You can "
+                    )}
+                    <Link to="/report" className="text-link">
+                      change your filters
+                    </Link>{" "}
+                    on the results page.
+                  </p>
+                </Notice>
+              </div>
+            )}
+          </section>
 
-      <div className="grid-2" style={{ marginBottom: "1.5rem" }}>
-        {activeSlots.includes("am") && <RoutinePreview title="Morning" products={am} />}
-        {activeSlots.includes("pm") && <RoutinePreview title="Evening" products={pm} />}
-      </div>
-
-      <div className="row">
-        <button type="button" className="btn btn-primary btn-lg" onClick={saveRoutine} disabled={am.length === 0 && pm.length === 0}>
-          {saved ? (<><CheckIcon />Saved</>) : "Save this routine"}
-        </button>
-        <Link to="/report" className="btn btn-outline">Back to report</Link>
-      </div>
-    </>
-  );
-}
-
-function StepPicker({ category, options, value, onChange }) {
-  return (
-    <div className="field">
-      <label className="label">{CATEGORY_LABELS[category]}</label>
-      {options.length > 1 ? (
-        <select className="select" value={value} onChange={(event) => onChange(event.target.value)}>
-          {options.map((product) => (
-            <option key={product.id} value={product.id}>{product.name}</option>
-          ))}
-        </select>
-      ) : (
-        <div className="routine-step" style={{ padding: "0.5rem 0" }}>
-          <span>{options[0]?.name}</span>
+          {depth === "extras" && (
+            <section className="panel" aria-labelledby="extras-heading">
+              <h2 id="extras-heading" className="panel-title">
+                Extra steps
+              </h2>
+              {extrasAvailable.length === 0 ? (
+                <p className="panel-sub">No extra steps matched your filters for this time of day.</p>
+              ) : (
+                <ul className="extras-list">
+                  {extrasAvailable.map((category) => {
+                    const meta = categoryMeta(category);
+                    const options = optionsFor(slotOptions, category);
+                    const on = Boolean(extras[category]);
+                    const chosen = chosenFor(category);
+                    return (
+                      <li key={category} className="extra">
+                        <div className="extra-row">
+                          <div>
+                            <p className="extra-name" id={`extra-${category}`}>
+                              {meta.label}
+                            </p>
+                            <p className="extra-hint">{meta.hint}</p>
+                          </div>
+                          <button
+                            type="button"
+                            role="switch"
+                            className="switch"
+                            aria-checked={on}
+                            aria-labelledby={`extra-${category}`}
+                            onClick={() => {
+                              setExtras((current) => ({ ...current, [category]: !on }));
+                              setSavedAt(null);
+                            }}
+                          />
+                        </div>
+                        {on && options.length > 1 && (
+                          <select
+                            className="select"
+                            aria-label={`${meta.label} product`}
+                            value={chosen?.id || ""}
+                            onChange={(event) => choose(category, event.target.value)}
+                          >
+                            {options.map((p) => (
+                              <option key={p.id} value={p.id}>
+                                {p.name} ({formatPrice(p.price, p.currency)})
+                              </option>
+                            ))}
+                          </select>
+                        )}
+                      </li>
+                    );
+                  })}
+                </ul>
+              )}
+            </section>
+          )}
         </div>
-      )}
-    </div>
-  );
-}
 
-function RoutinePreview({ title, products }) {
-  return (
-    <div className="card">
-      <div className="card-header">
-        <h3 className="card-title">{title}</h3>
-        <span className="badge">{products.length} step{products.length === 1 ? "" : "s"}</span>
-      </div>
-      <div className="card-body" style={{ paddingBlock: "0.25rem" }}>
-        {products.length === 0 ? (
-          <p className="text-sm muted" style={{ padding: "0.75rem 0" }}>No steps yet.</p>
-        ) : (
-          products.map((product, index) => (
-            <div className="routine-step" key={`${product.id}-${index}`}>
-              <span className="routine-order">{index + 1}</span>
-              <span>{product.name}</span>
-              <span className="routine-category">{product.category}</span>
-            </div>
-          ))
-        )}
+        <div className="routine-result">
+          <div className="routine-columns">
+            {activeSlots.map((slot) => (
+              <section
+                key={slot}
+                className={`routine-card tone-${slot === "am" ? "butter" : "mint"}`}
+                aria-label={slot === "am" ? "Morning routine" : "Evening routine"}
+              >
+                <h2 className="routine-card-title">
+                  <span className="routine-card-icon" aria-hidden="true">
+                    {slot === "am" ? <SunIcon /> : <MoonIcon />}
+                  </span>
+                  {slot === "am" ? "Morning" : "Evening"}
+                  <span className="routine-card-count">
+                    {steps[slot].length} step{steps[slot].length === 1 ? "" : "s"}
+                  </span>
+                </h2>
+                {steps[slot].length === 0 ? (
+                  <p className="routine-empty">No steps yet.</p>
+                ) : (
+                  <ol className="routine-steps">
+                    {steps[slot].map((product) => (
+                      <li key={`${slot}-${product.id}`}>
+                        <span className="routine-step-name">{product.name}</span>
+                        <span className="routine-step-cat">{categoryMeta(product.category).label}</span>
+                      </li>
+                    ))}
+                  </ol>
+                )}
+              </section>
+            ))}
+          </div>
+
+          <div className="routine-summary">
+            <p>
+              <strong>{uniqueProducts.size}</strong> product{uniqueProducts.size === 1 ? "" : "s"}, about{" "}
+              <strong>{formatPrice(total)}</strong> in total
+            </p>
+            <button type="button" className="btn btn-primary" onClick={save} disabled={empty}>
+              {savedAt ? (
+                <>
+                  <CheckIcon />
+                  Saved to your profile
+                </>
+              ) : (
+                "Save this routine"
+              )}
+            </button>
+          </div>
+          {savedAt && (
+            <Notice tone="info">
+              <p>
+                Saved. You'll find it on your <Link to="/profile" className="text-link">profile</Link>.
+              </p>
+            </Notice>
+          )}
+        </div>
       </div>
     </div>
   );

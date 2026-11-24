@@ -1,17 +1,20 @@
-import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
+
+import { useAuth } from "./useAuth";
+import { AnalysisContext } from "./contexts";
 
 /**
- * Shared state across the flow.
+ * State shared across one skin check.
  *
- * The analysis itself (prediction, recommendations, preview) is in memory
- * only — a stale prediction restored after a reload would be worse than
- * none. The skin profile (avoid list, budget, routine, last result) IS
- * persisted, because it's a stable fact about the user rather than the
- * result of one scan.
+ * The scan itself (prediction, recommendations, photo preview) lives in
+ * memory only: restoring a stale result after a reload would be worse than
+ * starting fresh. The skin profile (ingredients to avoid, budget, saved
+ * routine, last result) is a standing preference, so it is saved in this
+ * browser, separately for each account.
  */
 
-const AnalysisContext = createContext(null);
-const PROFILE_KEY = "skinsense-profile";
+const PROFILE_PREFIX = "skinsense-profile:";
+const LEGACY_SHARED_KEY = "skinsense-profile";
 
 const EMPTY_PROFILE = {
   avoidIngredients: [],
@@ -22,9 +25,11 @@ const EMPTY_PROFILE = {
   routine: null,
 };
 
-function loadProfile() {
+function loadProfile(userId) {
   try {
-    const raw = localStorage.getItem(PROFILE_KEY);
+    localStorage.removeItem(LEGACY_SHARED_KEY);
+    if (!userId) return EMPTY_PROFILE;
+    const raw = localStorage.getItem(PROFILE_PREFIX + userId);
     return raw ? { ...EMPTY_PROFILE, ...JSON.parse(raw) } : EMPTY_PROFILE;
   } catch {
     return EMPTY_PROFILE;
@@ -32,26 +37,43 @@ function loadProfile() {
 }
 
 export function AnalysisProvider({ children }) {
+  const { userId } = useAuth();
+
+  const [ownerId, setOwnerId] = useState(userId);
+  const [profile, setProfile] = useState(() => loadProfile(userId));
   const [prediction, setPrediction] = useState(null);
   const [recommendations, setRecommendations] = useState(null);
   const [previewUrl, setPreviewUrl] = useState(null);
-  const [profile, setProfile] = useState(loadProfile);
+  const [photoMeta, setPhotoMeta] = useState(null);
+
+  if (ownerId !== userId) {
+    setOwnerId(userId);
+    setProfile(loadProfile(userId));
+    setPrediction(null);
+    setRecommendations(null);
+    setPreviewUrl(null);
+    setPhotoMeta(null);
+  }
 
   useEffect(() => {
+    if (!ownerId) return;
     try {
-      localStorage.setItem(PROFILE_KEY, JSON.stringify(profile));
+      localStorage.setItem(PROFILE_PREFIX + ownerId, JSON.stringify(profile));
     } catch {
-      // Storage unavailable — the profile still works for this session.
+      // Storage unavailable: preferences still apply for this session.
     }
-  }, [profile]);
+  }, [ownerId, profile]);
+
+  useEffect(() => {
+    if (!previewUrl) return undefined;
+    return () => URL.revokeObjectURL(previewUrl);
+  }, [previewUrl]);
 
   const reset = useCallback(() => {
     setPrediction(null);
     setRecommendations(null);
-    setPreviewUrl((current) => {
-      if (current) URL.revokeObjectURL(current);
-      return null;
-    });
+    setPreviewUrl(null);
+    setPhotoMeta(null);
   }, []);
 
   const value = useMemo(
@@ -62,18 +84,14 @@ export function AnalysisProvider({ children }) {
       setRecommendations,
       previewUrl,
       setPreviewUrl,
+      photoMeta,
+      setPhotoMeta,
       profile,
       setProfile,
       reset,
     }),
-    [prediction, recommendations, previewUrl, profile, reset],
+    [prediction, recommendations, previewUrl, photoMeta, profile, reset],
   );
 
   return <AnalysisContext.Provider value={value}>{children}</AnalysisContext.Provider>;
-}
-
-export function useAnalysis() {
-  const context = useContext(AnalysisContext);
-  if (!context) throw new Error("useAnalysis must be used inside <AnalysisProvider>.");
-  return context;
 }

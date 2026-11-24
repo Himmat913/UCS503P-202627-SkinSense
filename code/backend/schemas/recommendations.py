@@ -39,6 +39,7 @@ class ProductOut(BaseModel):
     category: str
     price: int
     currency: str = "INR"
+    step_time: str
     key_ingredients: list[str]
     reasons: list[str]
     match_score: float
