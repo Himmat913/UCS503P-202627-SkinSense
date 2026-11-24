@@ -1,84 +1,123 @@
-# Week 12 : draw.io Export Quality and Missing Model Files in Deployment Diagram
+# Week 12 : Recommendations Engine Returning Wrong Shape and Budget Filter Currency Mismatch
 
-## draw.io PNG Export Blurry at Default Zoom
+## get_recommendations Returns Dict Instead of List for Products
 
 **Error:**
-No crash. The exported PNG diagrams looked sharp on screen but were blurry when inserted into the report at print size.
+```
+TypeError: Cannot read properties of undefined (reading 'map')
+  at Recommendations.jsx:48
+```
 
 **Relevant Context**
-The diagrams were exported from draw.io at the default 100% zoom, which rasterises at 96 dpi:
+The frontend called `result.products.map(...)` but `products` was a plain object, not an array. The engine was returning a dict keyed by product id:
 
+```python
+# recommendations/engine.py — before fix
+def get_recommendations(session, skin_type, acne_severity, ...):
+    ...
+    products = {}
+    for candidate in kept:
+        products[candidate.id] = {
+            "id": candidate.id,
+            "name": candidate.name,
+            ...
+        }
+    return {
+        "products": products,   # dict, not list
+        "routine": routine,
+        ...
+    }
 ```
-Export settings used:
-  Zoom: 100%
-  Format: PNG
-  Resolution: 96 dpi (screen default)
 
-Result: image was 820 × 460px
-When placed in a Word document at 10cm wide: ~208 dpi
-When printed at 300 dpi: upscaled and blurry
+The React component expected an array:
+
+```jsx
+// Recommendations.jsx
+{result.products.map((p) => (     // TypeError — .map is not a function on {}
+  <ProductCard key={p.id} product={p} />
+))}
 ```
 
 **Key Observation**
-96 dpi is fine for screen but insufficient for print. The image was being upscaled when placed in the document, making text in the diagram look fuzzy.
+Python dicts and JavaScript objects look similar but React array methods (`map`, `filter`, `length`) only work on actual arrays. Returning `products` as a dict broke every component that iterated over it. The API contract between backend and frontend must be agreed on a list type for collections.
 
 **Solution**
-Export at 300% zoom or export as SVG:
+Return `products` as a list in the engine:
 
-```
-Option 1 — High-res PNG:
-  File > Export As > PNG
-  Zoom: 300%
-  Result: 2460 × 1380px — clean at print size
-
-Option 2 — SVG (vector, infinitely scalable):
-  File > Export As > SVG
-  Embed fonts: Yes
-  Include a copy of the diagram: Yes
+```python
+# recommendations/engine.py — after fix
+    products = []
+    for candidate in kept:
+        products.append({
+            "id": candidate.id,
+            "name": candidate.name,
+            ...
+        })
+    return {
+        "products": products,   # list — .map works in React
+        "routine": routine,
+        ...
+    }
 ```
 
 **Because**
-PNG is raster — the pixels are fixed at export time. Exporting at 300% gives enough pixel density for 300 dpi print. SVG is vector and scales to any size without loss, making it the better choice for diagrams that will be printed.
+JSON arrays map to JavaScript arrays, which have `.map()`. JSON objects map to plain JavaScript objects, which do not. The fix aligns the return type with what the Pydantic response model (`RecommendationResponse`) and the frontend both expect.
 
 ---
 
-## Deployment Diagram Missing Model Files Node
+## Budget Filter Comparing INR Prices Against USD Ceiling
 
 **Error:**
-No crash. The lab evaluator flagged the deployment diagram as incomplete — the ML model files were not represented as a node.
+No crash. But products priced at ₹400–₹600 were being excluded when the user set a budget of 500. The user expected ₹500 to include ₹400 products — but the filter was treating prices as USD.
 
 **Relevant Context**
-The deployment diagram showed the FastAPI server, database, and frontend, but the model files were not explicitly shown:
+Product prices in `products.json` were stored in INR (e.g. `"price": 450`). The budget ceiling coming in from the frontend was also in INR. But an earlier version of the seed script had stored prices in USD and multiplied by `USD_TO_INR = 83.5` only for display. After the seed was updated to store native INR prices, the display conversion was removed — but the budget comparison was never updated. It was still comparing raw stored values as if they were USD:
 
-```
-Original diagram nodes:
-  [Browser]  <-->  [FastAPI Server]  <-->  [PostgreSQL]
-                         |
-                   [React Frontend]
+```python
+# rules.py — before fix (prices stored as INR, budget in INR)
+def budget_filter(candidates, budget_max):
+    if budget_max is None:
+        return candidates, []
+    kept, dropped = [], []
+    for c in candidates:
+        # c.price is ₹450, budget_max is ₹500
+        # comparison is correct numerically, but old code had a
+        # USD_TO_INR conversion here that was left in by mistake:
+        price_in_comparison_units = c.price * 83.5   # ← bug: double-converting
+        if price_in_comparison_units > budget_max:
+            dropped.append(Excluded(c.id, c.name, f"₹{c.price} is above your ₹{budget_max} per-product budget."))
+        else:
+            kept.append(c)
+    return kept, dropped
 ```
 
-The evaluator's feedback: "Where are the model weights stored? How does the inference module access them? This is a critical part of your deployment."
+A ₹450 product was being compared as `450 × 83.5 = 37,575` against a budget of `500`, so it was always excluded.
 
 **Key Observation**
-The model files (`resnet50_acne.pt`, `mobilenetv2_skintype.pt`) are not database rows or API responses — they are static files loaded from disk at server startup. They are a distinct deployment artefact that needs to be shown.
+When the seed script was refactored to store prices natively in INR, the stale `USD_TO_INR` multiplier in `budget_filter` was not removed. This made the budget filter reject almost every product regardless of the user's ceiling.
 
 **Solution**
-Add a "Model Store" node attached to the FastAPI server:
+Remove the stale conversion — compare price directly in INR:
 
-```
-Updated diagram nodes:
-  [Browser]  <-->  [FastAPI Server]  <-->  [PostgreSQL]
-                         |
-               [Model Store: /models/]
-               resnet50_acne.pt
-               mobilenetv2_skintype.pt
+```python
+# rules.py — after fix
+def budget_filter(candidates, budget_max):
+    if budget_max is None:
+        return candidates, []
+    kept, dropped = [], []
+    for c in candidates:
+        if c.price > budget_max:   # both in INR — no conversion needed
+            dropped.append(Excluded(c.id, c.name, f"₹{c.price} is above your ₹{budget_max} per-product budget."))
+        else:
+            kept.append(c)
+    return kept, dropped
 ```
 
 **Because**
-A deployment diagram should show every persistent artefact the system depends on. If the model files are missing from the production server the application fails at startup. Making this explicit in the diagram also prompts the README to include a step for downloading them.
+Once prices are stored in a single currency throughout the pipeline, no conversion is needed at comparison time. The bug survived refactoring because the multiplier was embedded in the filter logic rather than in the seed script where the currency decision was made.
 
 ---
 
 ## Summary
 
-This week I fixed the two diagram issues flagged during the week 12 lab review. The PNG export quality was improved by exporting at 300% zoom. The deployment diagram was updated to include the model store node, which was a valid gap the evaluator caught. The diagrams are now in the repo at the correct path.
+This week I debugged two issues in the recommendations engine. The first was a frontend crash caused by the engine returning `products` as a dict instead of a list — fixed by changing the return type to match the Pydantic schema and React's `.map()` expectation. The second was a budget filter that double-applied a currency conversion after the seed script was updated to store native INR prices — fixed by removing the stale `USD_TO_INR` multiplier from the filter. Both bugs were caught by running the full recommendations flow end-to-end with a real database rather than unit tests alone.

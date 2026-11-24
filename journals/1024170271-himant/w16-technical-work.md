@@ -1,4 +1,4 @@
-# Week 16 : Alembic DuplicateColumn After Manual DDL and Merge Conflict Resolution
+# Week 16 : Alembic DuplicateColumn After Manual DDL and JWT Refresh 422 on Missing Key
 
 ## DuplicateColumn Error from Manual ALTER TABLE
 
@@ -48,42 +48,64 @@ def upgrade():
 
 ---
 
-## Merge Conflict in Arnav's Journal Index
+## JWT Refresh Endpoint Returns 422 When Body Key Is Wrong
 
 **Error:**
 ```
-CONFLICT (content): Merge conflict in journals/1024170259-arnav/index.md
-Automatic merge failed; fix conflicts and then commit the result.
+POST /api/auth/refresh  →  422 Unprocessable Entity
+{
+  "detail": [
+    {
+      "loc": ["body", "refresh_token"],
+      "msg": "field required",
+      "type": "value_error.missing"
+    }
+  ]
+}
 ```
 
 **Relevant Context**
-Two people had edited Arnav's index file on different branches and git could not auto-merge them:
+The frontend was sending the refresh call with the key `token` instead of `refresh_token`:
 
+```js
+// auth.js — before fix
+const response = await api.post("/api/auth/refresh", {
+  token: localStorage.getItem("refresh_token"),   // wrong key
+});
 ```
-<<<<<<< HEAD
-- [w15-technical-work.md](w15-technical-work.md) : Test suite and bug fixes
-=======
-- [w15-technical-work.md](w15-technical-work.md) : Performance profiling
->>>>>>> feature/arnav-w15
+
+The FastAPI endpoint expected:
+
+```python
+# auth.py
+class RefreshRequest(BaseModel):
+    refresh_token: str
+
+@router.post("/auth/refresh")
+def refresh(payload: RefreshRequest, session: Session = Depends(get_session)):
+    ...
 ```
+
+Pydantic validated the body against `RefreshRequest` and rejected the request because the `refresh_token` field was absent. The error appeared only after JWT expiry, so it was not caught during earlier testing when access tokens were still valid.
 
 **Key Observation**
-Both edits were to the same line in the index file. This was not a semantic conflict — one side just had a different subtitle for the same week. Since this was Arnav's index file, taking his version was the right call.
+Pydantic model field names must match exactly what the client sends. A wrong key name does not raise a 400 — it raises 422 with a Pydantic validation error listing the missing field. The bug was invisible during initial testing because access tokens had a one-hour TTL and tests did not wait for expiry.
 
 **Solution**
-Accept the incoming branch's version for that file:
+Match the request body key to the Pydantic model field:
 
-```bash
-git checkout --theirs journals/1024170259-arnav/index.md
-git add journals/1024170259-arnav/index.md
-git commit
+```js
+// auth.js — after fix
+const response = await api.post("/api/auth/refresh", {
+  refresh_token: localStorage.getItem("refresh_token"),  // correct key
+});
 ```
 
 **Because**
-`git checkout --theirs` replaces the conflicted file with the version from the branch being merged in. For a file you do not own, taking `--theirs` is safer than manually editing the conflict markers, because it avoids accidentally introducing a hybrid version that neither side intended.
+FastAPI uses Pydantic to parse and validate JSON request bodies. If a required field is missing from the JSON object, Pydantic raises a `ValidationError` and FastAPI returns 422 automatically before the route function runs. Renaming the client-side key to match the model field resolves the mismatch.
 
 ---
 
 ## Summary
 
-This week I handled two issues that came up during final integration. The first was a gap between manual database changes and Alembic's migration history — resolved by using `alembic stamp` to sync the two. The second was a merge conflict in another contributor's journal file — resolved cleanly by taking their version with `git checkout --theirs`. The project is now in a consistent state with all migrations tracked by Alembic and no pending conflicts.
+This week I fixed two issues that surfaced during final integration. The first was an Alembic state mismatch caused by a manual DDL change — resolved by using `alembic stamp` to sync the migration history with the actual database schema. The second was a 422 error on the JWT refresh endpoint caused by the frontend sending the wrong JSON key — resolved by correcting the key name to match the Pydantic model field. Both issues were only visible in a fully integrated environment, not in isolated unit tests.
