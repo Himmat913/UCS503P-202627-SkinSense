@@ -1,21 +1,89 @@
-# Week 16 : Frontend Redesign
+# Week 16 : Dark Mode Flash of Unstyled Content and Feedback State Lost on Navigation
 
-## Redesign Scope
+## Flash of Unstyled Content in Dark Mode
 
-After the second prototype I did a full visual redesign of the frontend. The main goals were a cleaner layout on the results and recommendations pages, better use of the existing shadcn components, and making the skin-type source (model vs. manual) visible to the user.
+**Error:**
+No crash. On hard refresh, the page would flash white (light mode) for a fraction of a second before switching to dark mode, even when dark mode was the saved preference.
 
-## New Components
+**Relevant Context**
+The dark mode was applied by a `useEffect` that runs after the component mounts:
 
-I added `ConfidenceMeter`, `ModuleBadge`, `AnalysisProgress`, and `DemoBanner` as reusable components. Each one is in its own file under `src/components/`. I removed `ThemeToggle.jsx` and `WhyButton.jsx` since they were not being used in any page.
+```jsx
+// main.jsx — original broken version
+function App() {
+  useEffect(() => {
+    const saved = localStorage.getItem("theme");
+    if (saved === "dark") {
+      document.documentElement.classList.add("dark");
+    }
+  }, []);
+  ...
+}
+```
 
-## Removed Theme Files
+**Key Observation**
+`useEffect` runs after the first paint. The browser paints the page once with the default (light) styles, then the effect fires and switches to dark mode. This causes a visible flash.
 
-The old `lib/theme.js` and `styles/theme.css` were holdovers from an earlier approach to theming. The app now uses only shadcn variables and the base CSS. I deleted those two files and updated any imports that referenced them.
+**Solution**
+Add an inline `<script>` in the `<head>` of `index.html` that runs synchronously before any CSS or React mounts:
 
-## Feedback Page
+```html
+<!-- index.html — fixed -->
+<head>
+  <script>
+    (function () {
+      try {
+        var theme = localStorage.getItem("theme");
+        if (theme === "dark") {
+          document.documentElement.classList.add("dark");
+        }
+      } catch (e) {}
+    })();
+  </script>
+  <link rel="stylesheet" href="/src/base.css" />
+</head>
+```
 
-I removed the old `pages/Feedback.jsx` and replaced it with a simpler inline feedback widget at the bottom of the results page. It posts to the `/api/feedback` endpoint that Himmat built.
+**Because**
+An inline script in `<head>` is a render-blocking resource — it runs before the browser paints anything. By the time the first pixel is painted, the `dark` class is already on the `<html>` element, so there is nothing to flash.
 
-## Coordination With Backend
+---
 
-I checked with Himmat that the new response shapes I was relying on (the progress array format, the skin_type_source field) were in place before I merged the redesign branch.
+## Inline Feedback Widget Losing State on Navigation
+
+**Error:**
+No crash. When a user typed feedback text, navigated to another tab, and came back, the feedback form was empty. The `feedbackSent` flag was also reset, so users could submit feedback multiple times.
+
+**Relevant Context**
+The feedback state was held in local component state inside `Feedback.jsx`:
+
+```jsx
+// Feedback.jsx — original
+const [feedbackText, setFeedbackText] = useState("");
+const [feedbackSent, setFeedbackSent] = useState(false);
+// component unmounts when user navigates away — state is destroyed
+```
+
+**Key Observation**
+React destroys component state when a component unmounts. Navigation in a single-page app unmounts the results page, which unmounts `Feedback.jsx` and resets its state.
+
+**Solution**
+Lift `feedbackText` and `feedbackSent` to `AnalysisContext` so they survive navigation:
+
+```jsx
+// AnalysisContext.jsx — added feedback state
+const [feedbackText, setFeedbackText] = useState("");
+const [feedbackSent, setFeedbackSent] = useState(false);
+
+// Feedback.jsx — now reads from context
+const { feedbackText, setFeedbackText, feedbackSent, setFeedbackSent } = useAnalysis();
+```
+
+**Because**
+`AnalysisContext` is mounted at the app root and lives for the full session. State in the context persists across route changes, so the feedback text and sent flag survive navigation between tabs.
+
+---
+
+## Summary
+
+This week I fixed two issues found during final UI review. The dark mode flash was eliminated by moving the theme check to an inline script in `<head>` so it runs before the first paint. The feedback form losing state on navigation was fixed by lifting that state into `AnalysisContext`, which persists across route changes. The app now feels polished on both issues with no visual flicker and no state loss.

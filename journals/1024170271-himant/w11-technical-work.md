@@ -1,17 +1,80 @@
-# Week 11 : Progress Over Improvement Plan
+# Week 11 : Alembic Migration Running on Wrong Database
 
-## Photo Validation in the Full Request Flow
+## Alembic Running on SQLite Instead of PostgreSQL
 
-I tested the MediaPipe validation gate end to end: upload a photo that fails the face detection check, check the 400 response and the error message in the UI, then upload a valid photo and confirm the full predict-and-recommend chain still works. I fixed a bug where the gate was running on the raw uploaded bytes before the image was decoded, which caused MediaPipe to crash on some JPEG files.
+**Error:**
+```
+INFO  [alembic.runtime.migration] Running upgrade  -> a1b2c3d4, add skin_type_source column
+sqlalchemy.exc.OperationalError: (sqlite3.OperationalError) near "ALTER": syntax error
+[SQL: ALTER TABLE analysis_results ADD COLUMN skin_type_source VARCHAR]
+```
 
-## Alembic Migration for skin_type_source
+**Relevant Context**
+The `DATABASE_URL` environment variable had been set using `setx` in a previous terminal session:
 
-Muskan's skin-type model needed a new column in `AnalysisResult` to record whether the skin type came from the model or from the user fallback. I wrote a migration to add `skin_type_source` with a default of `"user"` so existing rows are not broken.
+```cmd
+setx DATABASE_URL "postgresql+psycopg2://postgres:password@localhost:5432/skinsense"
+```
 
-## Auth Tests and Analysis Tests
+Then Alembic was run in what appeared to be a new terminal:
 
-After the schema change I re-ran the full test suite. All 15 auth tests and 8 analysis tests passed. I added two more analysis tests: one that checks the validation gate returns 400 on a blank image, and one that checks `skin_type_source` is set correctly when the user provides a manual value.
+```cmd
+alembic upgrade head
+```
 
-## Notes
+**Key Observation**
+`setx` writes the variable to the Windows registry for future processes. It does not affect the terminal that ran it, nor any process already open — including VS Code and all terminals inside it. So Alembic was still picking up the SQLite URL from the VS Code session that was open before `setx` was called.
 
-The `/api/predict` endpoint now saves predictions and validates photos. The skin-type model integration is waiting on Muskan finishing the training run on Kaggle. Once that is done I will swap out the manual fallback.
+**Solution**
+Use `set` (not `setx`) in the same terminal where Alembic will run:
+
+```cmd
+set DATABASE_URL=postgresql+psycopg2://postgres:password@localhost:5432/skinsense
+alembic upgrade head
+```
+
+**Because**
+`set` writes to the current process's environment immediately. `setx` writes to the registry and only takes effect for processes started after that point. VS Code and its integrated terminals inherit the environment that VS Code itself was started with, so `setx` changes are invisible until VS Code is restarted.
+
+---
+
+## Duplicate Column Error on Re-Run
+
+**Error:**
+```
+sqlalchemy.exc.OperationalError: (sqlite3.OperationalError) duplicate column name: skin_type_source
+```
+
+**Relevant Context**
+Even after opening a new VS Code integrated terminal, the error persisted. The migration had appeared to succeed once, then ran again on the same SQLite file:
+
+```cmd
+alembic upgrade head
+# ran on SQLite, appeared to succeed
+# opened new terminal, ran again
+alembic upgrade head
+# duplicate column error — column already existed on SQLite
+```
+
+**Key Observation**
+VS Code's integrated terminal inherits the environment that VS Code was launched with. Opening a new terminal tab inside VS Code does not pick up `setx` changes — only fully restarting VS Code does. The migration was still running against the SQLite file on both attempts.
+
+**Solution**
+Close VS Code completely and reopen it. The new VS Code process inherits the registry value set by `setx`, so all integrated terminals inside it will now have the correct `DATABASE_URL`.
+
+```cmd
+# After restarting VS Code
+echo %DATABASE_URL%
+# should print: postgresql+psycopg2://postgres:password@localhost:5432/skinsense
+alembic upgrade head
+# now runs against PostgreSQL
+```
+
+**Because**
+Windows environment inheritance works at process creation time. Each process gets a copy of its parent's environment. VS Code's terminal spawns from VS Code's own environment, not from the registry. A full VS Code restart creates a new process that reads the registry values set by `setx`.
+
+---
+
+## Summary
+
+This week I fixed the Alembic migration setup so it reliably runs against PostgreSQL. The root cause was a Windows environment variable inheritance issue: `setx` does not update running processes. The fix is either to use `set` for the current terminal session or to restart VS Code fully after `setx`. The database migration for the `skin_type_source` column then ran cleanly against PostgreSQL.

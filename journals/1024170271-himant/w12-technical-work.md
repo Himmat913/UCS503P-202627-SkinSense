@@ -1,17 +1,116 @@
-# Week 12 : Skin-Type Model Integration
+# Week 12 : ResNet-50 Checkpoint Key Mismatch and Frontend 409 Handling
 
-## Integrating the Trained Model
+## ResNet-50 State Dict Key Mismatch on Load
 
-Muskan finished training the 3-class MobileNetV2 (dry/normal/oily) on Kaggle. I took her checkpoint (`mobilenetv2_skintype.pt`) and added it to the backend under `ml_models/skin_type/`. The integration follows the same pattern as the acne model: the checkpoint is loaded once at startup, the prediction runs on the MediaPipe-cropped face region, and the result is passed through a softmax to get per-class confidence scores.
+**Error:**
+```
+RuntimeError: Error(s) in loading state_dict for ResNet:
+        Unexpected key(s) in state_dict: "model.conv1.weight", "model.bn1.weight",
+        "model.bn1.bias", "model.layer1.0.conv1.weight" ...
+        Missing key(s) in state_dict: "conv1.weight", "bn1.weight" ...
+```
 
-## Fallback Path
+**Relevant Context**
+The checkpoint was saved from a training wrapper class that wrapped the ResNet inside a `self.model` attribute:
 
-If the skin-type model is not found at startup, the backend falls back to asking the user via a 409 response. The frontend shows a manual skin-type picker when it gets a 409. I kept this fallback path in place because it is useful for local development without the checkpoint.
+```python
+# training script — how the checkpoint was saved
+class AcneClassifier(nn.Module):
+    def __init__(self):
+        super().__init__()
+        self.model = resnet50(pretrained=True)
+        self.model.fc = nn.Linear(2048, 3)
 
-## Backend Tests
+trainer = AcneClassifier()
+torch.save(trainer.state_dict(), "resnet50_acne.pt")
+# keys saved as: "model.conv1.weight", "model.layer1.0.conv1.weight" ...
+```
 
-I updated the analysis tests to cover the model path: one test loads a real face image and checks that `skin_type_source` is `"model"`, and one checks that the 409 fallback fires when the model file is missing. All tests pass.
+But at inference time the checkpoint was loaded directly into a bare ResNet:
 
-## Notes
+```python
+# inference.py — original broken load
+model = resnet50(pretrained=False)
+model.fc = nn.Linear(2048, 3)
+model.load_state_dict(torch.load("resnet50_acne.pt"))
+# bare ResNet keys: "conv1.weight", "layer1.0.conv1.weight" ...
+# mismatch with the "model." prefix in the checkpoint
+```
 
-The acne model gives `source: "model"` and the skin-type model now gives `skin_type_source: "model"` in the same prediction response. The two models run sequentially in `/api/predict`. The test balanced accuracy for the skin-type model is around 0.71, which is in line with the human-rater agreement ceiling for this dataset.
+**Key Observation**
+The checkpoint keys carry a `model.` prefix from the wrapper class. The inference-time model has no wrapper, so its keys have no prefix. PyTorch's `load_state_dict` does an exact string match on keys — any prefix difference causes a full failure.
+
+**Solution**
+Strip the `model.` prefix from every key before loading:
+
+```python
+import collections
+
+raw = torch.load("resnet50_acne.pt", map_location="cpu")
+fixed = collections.OrderedDict(
+    (k[len("model."):] if k.startswith("model.") else k, v)
+    for k, v in raw.items()
+)
+model = resnet50(pretrained=False)
+model.fc = nn.Linear(2048, 3)
+model.load_state_dict(fixed)
+model.eval()
+```
+
+**Because**
+`torch.save(module.state_dict())` serialises the keys exactly as they appear in the module hierarchy. Wrapping a model in `self.model` prepends `model.` to every key. Stripping the prefix at load time realigns the keys without needing to re-export the checkpoint.
+
+---
+
+## Frontend Not Handling HTTP 409 from Predict Endpoint
+
+**Error:**
+No crash in the backend. But after uploading a photo without first saving a skin type, the frontend displayed a generic error message instead of prompting the user to enter their skin type.
+
+**Relevant Context**
+The predict endpoint returns 409 when skin type has not been recorded and the user has not filled in the profile:
+
+```python
+# inference.py — backend 409 response
+if not user.skin_type and not body.skin_type:
+    raise HTTPException(status_code=409, detail="skin_type_required")
+```
+
+The original frontend fetch just caught all non-2xx responses as a generic error:
+
+```js
+// Upload.jsx — original
+const res = await fetch("/api/predict", { method: "POST", body: formData });
+if (!res.ok) {
+  setError("Something went wrong. Please try again.");
+  return;
+}
+```
+
+**Key Observation**
+A 409 from this endpoint has a specific meaning: the backend needs skin type to be provided before it can run inference. That is not the same as a generic failure and needs its own UI path.
+
+**Solution**
+Check for 409 specifically and return a sentinel that the calling component can act on:
+
+```js
+// Upload.jsx — fixed
+const res = await fetch("/api/predict", { method: "POST", body: formData });
+if (res.status === 409) {
+  return { skinTypeRequired: true };
+}
+if (!res.ok) {
+  setError("Something went wrong. Please try again.");
+  return;
+}
+const data = await res.json();
+```
+
+**Because**
+HTTP status codes carry semantic meaning. A 409 Conflict here signals a specific precondition failure, not a server error. Handling it separately lets the UI show a targeted prompt instead of a generic error that leaves the user unsure what went wrong.
+
+---
+
+## Summary
+
+This week I integrated the trained ResNet-50 acne severity model into the backend. The main blocker was a state dict key mismatch caused by the training checkpoint being saved from a wrapper class. Stripping the key prefix at load time fixed it without re-training. I also improved the frontend to handle the 409 response from the predict endpoint so users are properly directed to fill in their skin type before running analysis.
