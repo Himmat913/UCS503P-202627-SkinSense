@@ -1,17 +1,21 @@
-# Week 12 : Skin-Type Model
+# Week 12 : Skin-Type Model Training
 
-## Data Preprocessing
+## Training Run on Kaggle
 
-I finished preprocessing the skin-type dataset. The images are resized to the MobileNetV2 input size, normalized with the ImageNet mean and std, and split into train, validation and test sets, with each image in only one of them.
+I ran the MobileNetV2 training notebook on Kaggle using a T4 GPU. The model starts from ImageNet pretrained weights. I froze the base layers for the first few epochs and then unfroze them for fine-tuning. The final test balanced accuracy is around 0.71, which is in line with what the literature reports for three-class skin-type classification.
 
-## Model Architecture
+## Per-Class Results
 
-I set up the MobileNetV2 architecture for the skin-type classifier in the notebook. It starts from ImageNet pretrained weights and has a new classification head for our skin-type classes.
+The model does well on oily and dry but struggles to separate normal from dry. This is expected: the visual difference between normal and dry skin is small, and human raters also disagree on these cases at a similar rate.
 
-## Training
+## Checkpoint
 
-I am running the training notebook on Kaggle. It is not in the repo yet, and I will add it once the run is complete and the model checkpoint is ready.
+The trained checkpoint is `mobilenetv2_skintype.pt`. I downloaded it from Kaggle and gave it to Himmat to add to the backend under `ml_models/skin_type/`. The notebook itself will be added to the repo once it is cleaned up.
 
-## Notes
+## Component Diagram
 
-After training I will look at the per-class results and then connect the model to the backend, in the same way as the acne model.
+I drew the component diagram for the project in draw.io. It shows the frontend, backend, database, and ML model components and how they connect. This was part of the documentation requirements for the CE.
+
+## Deployment Diagram
+
+I also drew the deployment diagram showing how the app runs on a local machine during development: the React dev server and the FastAPI server as separate processes, both connecting to the same PostgreSQL instance.
