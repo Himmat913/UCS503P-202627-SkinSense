@@ -15,3 +15,4 @@ I wrote the frontend API client, including a manual-fallback mode: if the backen
 ## Integration Check
 
 Once Himmat's routers were merged, I connected the pages to the real (stub-backed) endpoints and walked through the full upload → prediction → recommendation flow in the browser to confirm nothing broke across the handoff.
+

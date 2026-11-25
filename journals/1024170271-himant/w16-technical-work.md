@@ -109,3 +109,4 @@ FastAPI uses Pydantic to parse and validate JSON request bodies. If a required f
 ## Summary
 
 This week I fixed two issues that surfaced during final integration. The first was an Alembic state mismatch caused by a manual DDL change — resolved by using `alembic stamp` to sync the migration history with the actual database schema. The second was a 422 error on the JWT refresh endpoint caused by the frontend sending the wrong JSON key — resolved by correcting the key name to match the Pydantic model field. Both issues were only visible in a fully integrated environment, not in isolated unit tests.
+

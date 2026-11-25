@@ -100,3 +100,4 @@ A function should return a consistent type. Mixing `dict` and `list` in return p
 ## Summary
 
 This week I improved the referral logic and fixed a type inconsistency in the recommendations function. Referrals now trigger on low-confidence predictions as well as severe acne, which is the more important case. The mixed return type in `get_recommendations` was refactored so the function always returns a list and error conditions are raised as HTTP exceptions in the router.
+
